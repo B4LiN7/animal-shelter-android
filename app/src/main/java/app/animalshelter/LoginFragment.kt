@@ -56,7 +56,7 @@ class LoginFragment : Fragment() {
                             Log.i("Login", "Login failed: ${response.errorBody()?.string()}")
                             Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
                         }
-                        RetrofitService.cookieJar.printCookies()
+                        RetrofitService.cookieJar.printCookiesToLog()
                     } catch (e: Exception) {
                         Log.e("Login", "Error: ${e.message}")
                         Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -89,7 +89,7 @@ class LoginFragment : Fragment() {
                             Log.i("Register", "Register failed: ${response.errorBody()?.string()}")
                             Toast.makeText(requireContext(), "Register failed", Toast.LENGTH_SHORT).show()
                         }
-                        RetrofitService.cookieJar.printCookies()
+                        RetrofitService.cookieJar.printCookiesToLog()
                     } catch (e: Exception) {
                         Log.e("Register", "Error: ${e.message}")
                         Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()

@@ -3,9 +3,11 @@ package app.animalshelter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
+import app.animalshelter.ApiService.RetrofitService
 import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -46,8 +48,17 @@ class MainActivity : AppCompatActivity() {
                         .commit()
                 }
 
+                R.id.nav_breeds -> {
+                    val fragment = BreedsFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.Main_FrameLayout, fragment)
+                        .commit()
+                }
+
                 R.id.nav_logout -> {
-                    // Handle the camera action
+                    RetrofitService.cookieJar.clear()
+                    RetrofitService.cookieJar.printCookiesToLog()
+                    Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
                 }
             }
             true
@@ -64,6 +75,4 @@ class MainActivity : AppCompatActivity() {
         NavigationView = findViewById(R.id.Main_NavigationView)
         FrameLayout = findViewById(R.id.Main_FrameLayout)
     }
-
-
 }

@@ -1,14 +1,23 @@
 package app.animalshelter
 
-import android.media.Image
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import app.animalshelter.ApiService.Media
+import app.animalshelter.ApiService.Pet
+import app.animalshelter.ApiService.PetDto
+import app.animalshelter.ApiService.RetrofitService
+import kotlinx.coroutines.launch
 
 class PetsFragment : Fragment() {
 
@@ -23,17 +32,63 @@ class PetsFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
 
-        val petsList = listOf(
-            Pet("Pet1", "Breed1", 2, null),
-            Pet("Pet2", "Breed2", 3, null),
-            Pet("Pet3", "Breed3", 1, null)
-        )
+        lifecycleScope.launch {
+            RetrofitService.cookieJar.printCookiesToLog()
 
-        val adapter = PetAdapter(petsList)
-        val recyclerView = view.findViewById<RecyclerView>(R.id.Pets_RecyclerView)
-        recyclerView.adapter = adapter
+            Log.i("PetsFragment", "Fetching pets")
+            val petList = RetrofitService.getRetrofitService().create(Pet::class.java).getPets()
+
+            Log.i("PetsFragment", "Fetching pet images")
+            val imageList: MutableList<Bitmap> = getImagesForPets(petList)
+
+            Log.i("PetsFragment", "Setting up RecyclerView")
+            val adapter = PetAdapter(petList, imageList)
+            val recyclerView = view.findViewById<RecyclerView>(R.id.Pets_RecyclerView)
+            recyclerView.layoutManager = LinearLayoutManager(context)
+            recyclerView.adapter = adapter
+        }
 
         return view
+    }
+
+    suspend fun getImagesForPets(petList: List<PetDto>): MutableList<Bitmap> {
+        val imageList: MutableList<Bitmap> = mutableListOf()
+        for (pet in petList) {
+            if (pet.imageUrl == null) {
+                val emptyBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                imageList.add(emptyBitmap)
+                continue
+            }
+            val fullUrl = pet.imageUrl
+            val startIndex = fullUrl.indexOf("/uploads")
+            val shortUrl = fullUrl.substring(startIndex)
+            val image = RetrofitService.getRetrofitService().create(Media::class.java).getMedia(shortUrl)
+            val inputStream = image.byteStream()
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            imageList.add(bitmap)
+        }
+        return imageList
+    }
+
+    class PetAdapter(private val pets: List<PetDto>, private val images: List<Bitmap>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
+        class PetViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
+            val name: TextView = view.findViewById(R.id.PetItem_TextView_Name)
+            val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PetViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.pet_item, parent, false)
+            return PetViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: PetViewHolder, position: Int) {
+            val pet = pets[position]
+            val image = images[position]
+            holder.name.text = pet.name
+            holder.image.setImageBitmap(image)
+        }
+
+        override fun getItemCount() = pets.size
     }
 
     companion object {
@@ -42,31 +97,4 @@ class PetsFragment : Fragment() {
             PetsFragment()
         }
     }
-
-    data class Pet(
-        val name: String,
-        val breed: String,
-        val age: Int,
-        val img: Image?,
-    )
-
-    class PetAdapter(private val pets: List<Pet>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
-        class PetViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
-            val name: TextView = view.findViewById<TextView>(R.id.PetItem_TextView_Name)
-            val image: ImageView = view.findViewById<ImageView>(R.id.PetItem_ImageView_Image)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PetViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.pet_data_item, parent, false)
-            return PetViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: PetViewHolder, position: Int) {
-            val pet = pets[position]
-            holder.name.text = pet.name
-        }
-
-        override fun getItemCount() = pets.size
-    }
-
 }

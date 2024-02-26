@@ -1,11 +1,29 @@
 package app.animalshelter.ApiService
 
+import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface Pet {
     @GET("/pet")
-    suspend fun getPets(): Call<List<PetDto>>
+    suspend fun getPets(): List<PetDto>
+
+    @GET("/pet/{id}")
+    suspend fun getPetById(id: Int): PetDto
+
+    @POST("/pet")
+    suspend fun createPet(@Body pet: PetDto): ResponseBody
+
+    @PUT("/pet/{id}")
+    suspend fun updatePet(@Path("id") id: Int, @Body pet: PetDto): ResponseBody
+
+    @DELETE("/pet/{id}")
+    suspend fun deletePet(@Path("id") id: Int): ResponseBody
 }
 
 data class PetDto(
@@ -15,6 +33,7 @@ data class PetDto(
     val description: String,
     val birthDate: String,
     val breedId: Int,
+    val imageUrl: String,
     val status: String,
 ) {
     override fun toString(): String {

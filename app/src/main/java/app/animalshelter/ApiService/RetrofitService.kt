@@ -40,11 +40,11 @@ class MyCookieJar : CookieJar {
         return cookies
     }
 
-    fun getCookies(): List<Cookie> {
-        return cookies
+    fun clear() {
+        cookies = ArrayList()
     }
 
-    fun printCookies() {
+    fun printCookiesToLog() {
         Log.i("Cookies", "Cookies:")
         for (cookie in cookies) {
             Log.i("Cookies", "${cookie.name}: \"${cookie.value}\"")
