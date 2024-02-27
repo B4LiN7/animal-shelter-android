@@ -36,7 +36,7 @@ class LoginFragment : Fragment() {
         LoginBtn?.setOnClickListener {
             if (currentEvent != AccountEvent.LOGIN) {
                 currentEvent = AccountEvent.LOGIN
-                setEvent()
+                setEvent(currentEvent)
                 clearInputs()
                 return@setOnClickListener
             }
@@ -68,7 +68,7 @@ class LoginFragment : Fragment() {
         RegisterBtn?.setOnClickListener {
             if (currentEvent != AccountEvent.REGISTER) {
                 currentEvent = AccountEvent.REGISTER
-                setEvent()
+                setEvent(currentEvent)
                 clearInputs()
                 return@setOnClickListener
             }
@@ -110,8 +110,8 @@ class LoginFragment : Fragment() {
         RegisterBtn = view.findViewById(R.id.Login_Button_Register)
     }
 
-    private fun setEvent() {
-        when (currentEvent) {
+    private fun setEvent(event: AccountEvent) {
+        when (event) {
             AccountEvent.LOGIN -> {
                 confirmPassword?.visibility = View.GONE
                 email?.visibility = View.GONE

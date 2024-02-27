@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private var FrameLayout: FrameLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        RetrofitService.initialize(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         init()
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
                         .commit()
                 }
 
-                R.id.nav_home -> {
+                R.id.nav_adoptions -> {
                 }
 
                 R.id.nav_pets -> {

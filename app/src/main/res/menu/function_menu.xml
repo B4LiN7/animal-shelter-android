@@ -6,8 +6,8 @@
         android:title="Bejelentkezés" />
 
     <item
-        android:id="@+id/nav_home"
-        android:title="Főoldal" />
+        android:id="@+id/nav_adoptions"
+        android:title="Örökbefogadások" />
 
     <item
         android:id="@+id/nav_pets"

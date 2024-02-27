@@ -4,17 +4,12 @@
     android:layout_height="match_parent"
     android:gravity="left">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/ic_launcher_round"
-        android:scaleType="centerCrop"
-        android:layout_gravity="center"
-        />
-
     <TextView
+        android:id="@+id/Header_TextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:textSize="20dp"
         android:text="Name"
         android:layout_gravity="center"
         />

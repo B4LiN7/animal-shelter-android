@@ -1,16 +1,20 @@
 package app.animalshelter.ApiService
 
+import android.content.Context
 import android.util.Log
-import okhttp3.Cookie
-import okhttp3.CookieJar
-import okhttp3.HttpUrl
+import app.animalshelter.R
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitService {
-    val BASE_URL = "http://10.0.2.2:3001/"
+    lateinit var BASE_URL: String
+
+    fun initialize(context: Context) {
+        BASE_URL = context.resources.getString(R.string.base_url)
+        Log.i("RetrofitService", "BASE_URL set to: $BASE_URL")
+    }
 
     val cookieJar = MyCookieJar()
 
@@ -26,28 +30,5 @@ object RetrofitService {
             .client(client.build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-}
-
-class MyCookieJar : CookieJar {
-    private var cookies: List<Cookie> = ArrayList()
-
-    override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        this.cookies = cookies
-    }
-
-    override fun loadForRequest(url: HttpUrl): List<Cookie> {
-        return cookies
-    }
-
-    fun clear() {
-        cookies = ArrayList()
-    }
-
-    fun printCookiesToLog() {
-        Log.i("Cookies", "Cookies:")
-        for (cookie in cookies) {
-            Log.i("Cookies", "${cookie.name}: \"${cookie.value}\"")
-        }
     }
 }
