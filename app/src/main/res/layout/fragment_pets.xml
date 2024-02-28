@@ -16,7 +16,7 @@
             android:id="@+id/Pets_EditText_Name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name" />
+            android:hint="Név" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -38,13 +38,13 @@
             android:id="@+id/Pets_EditText_Description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Description" />
+            android:hint="Leirás" />
 
         <EditText
             android:id="@+id/Pets_EditText_BirthDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Birth Date" />
+            android:hint="Születési dátum" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -65,7 +65,7 @@
             android:id="@+id/Pets_EditText_ImageUrl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Image URL" />
+            android:hint="Kép URL" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -103,6 +103,13 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <Button
+        android:id="@+id/Pets_Button_Add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Új állat felvétele"
+        android:layout_gravity="center"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/Pets_RecyclerView"

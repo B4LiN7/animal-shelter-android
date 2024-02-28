@@ -29,14 +29,30 @@ interface Pet {
 data class PetDto(
     val petId: Int,
     val name: String,
-    val sex: String,
+    val sex: Sex,
     val description: String,
     val birthDate: String,
     val breedId: Int,
     val imageUrl: String,
-    val status: String,
+    val status: Status,
 ) {
     override fun toString(): String {
         return "[$petId] $name ($sex) (Born on: $birthDate) (Status: $status)"
     }
+}
+
+enum class Sex(val description: String) {
+    OTHER("Nincs megadva"),
+    MALE("Him"),
+    FEMALE("Nőstény");
+}
+
+enum class Status(val description: String) {
+    UNKNOWN("Ismeretlen"),
+    INCOMING("Menhelyre jön"),
+    INSHELTER("Menhelyen van"),
+    ILL("Beteg"),
+    ADOPTING("Örökbefogadás alatt"),
+    ADOPTED("Örökbe fogadva"),
+    DECEASED("Elhunyt");
 }

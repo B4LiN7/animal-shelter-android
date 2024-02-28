@@ -25,15 +25,26 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/PetItem_TextView_Data"
+        android:id="@+id/PetItem_TextView_Description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Other Pet Data"
+        android:text="Pet Description"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/PetItem_TextView_Name"
         app:layout_constraintTop_toBottomOf="@id/PetItem_TextView_Name" />
+
+    <TextView
+        android:id="@+id/PetItem_TextView_Data"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Pet Data"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/PetItem_TextView_Description"
+        app:layout_constraintTop_toBottomOf="@id/PetItem_TextView_Description" />
 
     <Button
         android:id="@+id/PetItem_Button_Delete"
