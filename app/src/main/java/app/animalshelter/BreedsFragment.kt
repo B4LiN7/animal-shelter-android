@@ -25,7 +25,7 @@ class BreedsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_breeds, container, false)
 
         lifecycleScope.launch {
-            RetrofitService.cookieJar.printCookiesToLog()
+            RetrofitService.printCookiesToLog()
 
             val breedList: List<BreedDto>
             Log.i("BreedsFragment", "Fetching pets")
@@ -54,7 +54,7 @@ class BreedsFragment : Fragment() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BreedViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.breed_item, parent, false)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_breed, parent, false)
             return BreedViewHolder(view)
         }
 

@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         init()
 
         val toggle = ActionBarDrawerToggle(
-            this, DrawerLayout, Toolbar, R.string.open, R.string.close
+            this, DrawerLayout, Toolbar, R.string.nav_open, R.string.nav_close
         )
         toggle.drawerArrowDrawable.color = resources.getColor(R.color.white)
         DrawerLayout?.addDrawerListener(toggle)
@@ -57,8 +57,6 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_logout -> {
-                    RetrofitService.cookieJar.clear()
-                    RetrofitService.cookieJar.printCookiesToLog()
                     Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
                 }
             }

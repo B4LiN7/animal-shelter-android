@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">AnimalShelter</string>
     <string name="base_url">http://10.0.2.2:3001/</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="open">Open navigation drawer</string>
-    <string name="close">Close navigation drawer</string>
+    <string name="nav_open">Navigációs menü kinyitása</string>
+    <string name="nav_close">Navigációs menü bezárása</string>
+    <string name="btn_yes">Igen</string>
+    <string name="btn_no">Nem</string>
 </resources>

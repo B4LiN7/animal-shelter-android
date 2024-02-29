@@ -28,6 +28,11 @@ import app.animalshelter.ApiService.RetrofitService
 import app.animalshelter.ApiService.Sex
 import app.animalshelter.ApiService.Status
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZonedDateTime
@@ -45,6 +50,7 @@ class PetsFragment : Fragment() {
     private var btnSubmit: Button? = null
     private var btnCancel: Button? = null
     private var btnAdd: Button? = null
+    private var btnMakeImg: Button? = null
 
     // Form fields (initially null, will be initialized in initViews)
     private var petName: EditText? = null
@@ -68,6 +74,7 @@ class PetsFragment : Fragment() {
     // Services for fetching data
     private val petService = RetrofitService.getRetrofitService().create(Pet::class.java)
     private val breedService = RetrofitService.getRetrofitService().create(Breed::class.java)
+    private val mediaService = RetrofitService.getRetrofitService().create(Media::class.java)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,21 +97,65 @@ class PetsFragment : Fragment() {
             setEvent(currentEvent)
         }
 
+        btnMakeImg?.setOnClickListener {
+            lifecycleScope.launch {
+                try {
+                    val width = 100
+                    val height = 100
+                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+                    // Convert bitmap to file
+                    val file = File.createTempFile("temp", ".png", context?.cacheDir ?: File("/"))
+                    file.deleteOnExit()
+                    val fileOutputStream = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+                    fileOutputStream.flush()
+                    fileOutputStream.close()
+
+                    // Create RequestBody and MultipartBody.Part
+                    val requestFile = file.asRequestBody("image/png".toMediaTypeOrNull())
+                    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                    // Upload the file
+                    val response = mediaService.postMedia(body)
+                    Log.i("PetsFragment", "Image uploaded: ${response}")
+                } catch (e: Exception) {
+                    Log.e("PetsFragment", "Error uploading image", e)
+                }
+            }
+
+        }
+
         // Submit form (add or edit pet)
         btnSubmit?.setOnClickListener {
             Log.i("PetsFragment", "Submit button clicked. Executing event: $currentEvent")
-
-
-
             when (currentEvent) {
                 PetFragmentEvent.ADD_PET -> {
                     lifecycleScope.launch {
-
+                        try {
+                            val dto = getFormValues()
+                            petService.createPet(dto)
+                            Log.i("PetsFragment", "Pet added: [${dto.petId}] ${dto.name}")
+                            Toast.makeText(context, "Állat hozzáadva", Toast.LENGTH_SHORT).show()
+                            fetchAndDisplayPets()
+                        } catch (e: Exception) {
+                            Log.e("PetsFragment", "Error adding pet", e)
+                            Toast.makeText(context, "Nem sikerült hozzáadni az állatot", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
                 PetFragmentEvent.EDIT_PET -> {
                     lifecycleScope.launch {
-
+                        try {
+                            val dto = getFormValues()
+                            petService.updatePet(dto.petId, dto)
+                            Log.i("PetsFragment", "Pet updated: [${dto.petId}] ${dto.name}")
+                            Toast.makeText(context, "Állat szerkesztve", Toast.LENGTH_SHORT).show()
+                            fetchAndDisplayPets()
+                        } catch (e: Exception) {
+                            Log.e("PetsFragment", "Error updating pet", e)
+                            Toast.makeText(context, "Nem sikerült szerkeszteni az állatot", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
                 else -> {
@@ -119,7 +170,7 @@ class PetsFragment : Fragment() {
     // Fetch and display pets using PetAdapter
     private suspend fun fetchAndDisplayPets() {
         Log.i("PetsFragment", "Start fetching and displaying pets")
-        RetrofitService.cookieJar.printCookiesToLog()
+        RetrofitService.printCookiesToLog()
 
         Log.i("PetsFragment", "Fetching pets")
         val petList: List<PetDto> = fetchPets()
@@ -146,7 +197,7 @@ class PetsFragment : Fragment() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PetViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.pet_item, parent, false)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_pet, parent, false)
             return PetViewHolder(view)
         }
 
@@ -226,6 +277,8 @@ class PetsFragment : Fragment() {
                 form?.visibility = View.VISIBLE
                 recyclerView?.visibility = View.GONE
 
+                resetFormValues()
+
                 btnAdd?.visibility = View.GONE
                 btnSubmit?.text = "Felvétel"
             }
@@ -240,6 +293,15 @@ class PetsFragment : Fragment() {
     }
 
     // Set and get form values
+    private fun resetFormValues() {
+        petName?.setText("")
+        petDescription?.setText("")
+        petBirthDate?.setText("")
+        petImageUrl?.setText("")
+        petBreed?.setText("")
+        petSex?.setText("")
+        petStatus?.setText("")
+    }
     private suspend fun setFormValues(pet: PetDto) {
         petName?.setText(pet.name)
         petDescription?.setText(pet.description)
@@ -250,7 +312,7 @@ class PetsFragment : Fragment() {
 
         val breedId = pet.breedId
         val breed = fetchBreed(breedId)
-        petBreed?.setText(breed[breedId], false)
+        petBreed?.setText(breed, false)
     }
     private suspend fun getFormValues(): PetDto {
         val name = petName?.text.toString()
@@ -280,6 +342,7 @@ class PetsFragment : Fragment() {
         btnSubmit = view.findViewById(R.id.Pets_Button_Submit)
         btnCancel = view.findViewById(R.id.Pets_Button_BackToList)
         btnAdd = view.findViewById(R.id.Pets_Button_Add)
+        btnMakeImg = view.findViewById(R.id.Pets_Button_MakeImage)
 
         petName = view.findViewById(R.id.Pets_EditText_Name)
         petDescription = view.findViewById(R.id.Pets_EditText_Description)
@@ -289,19 +352,19 @@ class PetsFragment : Fragment() {
         petSex = view.findViewById(R.id.Pets_AutoCompleteTextView_Sex)
         petStatus = view.findViewById(R.id.Pets_AutoCompleteTextView_Status)
 
-        sexAdapter = ArrayAdapter(requireContext(), R.layout.list_item, Sex.entries.map { it.description })
+        sexAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Sex.entries.map { it.description })
         petSex?.setAdapter(sexAdapter)
 
-        statusAdapter = ArrayAdapter(requireContext(), R.layout.list_item, Status.entries.map { it.description })
+        statusAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Status.entries.map { it.description })
         petStatus?.setAdapter(statusAdapter)
 
         lifecycleScope.launch {
-            initFormBreeds()
+            initBreedAdapter()
         }
     }
-    private suspend fun initFormBreeds() {
+    private suspend fun initBreedAdapter() {
         val breeds = fetchBreeds()
-        breedAdapter = ArrayAdapter(requireContext(), R.layout.list_item, breeds.values.toList())
+        breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breeds.values.toList())
         petBreed?.setAdapter(breedAdapter)
     }
 
@@ -324,7 +387,6 @@ class PetsFragment : Fragment() {
                 val startIndex = fullUrl.indexOf("/uploads")
                 val shortUrl = fullUrl.substring(startIndex)
 
-                val mediaService = RetrofitService.getRetrofitService().create(Media::class.java)
                 val image = mediaService.getMedia(shortUrl)
 
                 val inputStream = image.byteStream()
@@ -348,15 +410,14 @@ class PetsFragment : Fragment() {
         }
         return breedMap
     }
-    private suspend fun fetchBreed(breedId: Int): Map<Int, String> {
-        val breedMap: MutableMap<Int, String> = mutableMapOf()
+    private suspend fun fetchBreed(breedId: Int): String {
         try {
             val breed = breedService.getBreedById(breedId)
-            breedMap[breed.breedId] = breed.name
+            return breed.name
         } catch (e: Exception) {
             Log.e("PetsFragment", "Error fetching breed with ID $breedId", e)
+            return "Ismeretlen fajta"
         }
-        return breedMap
     }
 
     companion object {

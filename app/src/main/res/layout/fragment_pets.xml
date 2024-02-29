@@ -61,11 +61,25 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/Pets_EditText_ImageUrl"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Kép URL" />
+            android:orientation="horizontal" >
+
+            <EditText
+                android:id="@+id/Pets_EditText_ImageUrl"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Kép URL" />
+
+            <Button
+                android:id="@+id/Pets_Button_MakeImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kép készitése" />
+
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
