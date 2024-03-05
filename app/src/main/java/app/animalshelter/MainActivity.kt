@@ -7,8 +7,11 @@ import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
+import app.animalshelter.ApiService.Auth
 import app.animalshelter.ApiService.RetrofitService
 import com.google.android.material.navigation.NavigationView
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,6 +43,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_adoptions -> {
+                    val fragment = AdoptionsFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.Main_FrameLayout, fragment)
+                        .commit()
                 }
 
                 R.id.nav_pets -> {
@@ -57,7 +64,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.nav_logout -> {
-                    Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        val authService = RetrofitService.getRetrofitService().create(Auth::class.java)
+                        authService.logout()
+                        Toast.makeText(this@MainActivity, "Logged out", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             true

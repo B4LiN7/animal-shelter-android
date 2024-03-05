@@ -61,4 +61,11 @@ dependencies {
 
     // For coroutines (async)
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
+
+    // CameraX
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+
 }

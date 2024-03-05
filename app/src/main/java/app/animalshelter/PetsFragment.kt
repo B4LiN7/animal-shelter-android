@@ -1,9 +1,13 @@
 package app.animalshelter
 
+import android.app.Activity.RESULT_OK
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +20,13 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -36,6 +47,8 @@ import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZonedDateTime
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class PetsFragment : Fragment() {
 
@@ -45,6 +58,10 @@ class PetsFragment : Fragment() {
 
     // Dialog
     private var dialog: AlertDialog.Builder? = null
+
+    // Camera
+    private lateinit var imageCapture: ImageCapture
+    private lateinit var cameraExecutor: ExecutorService
 
     // Buttons (initially null, will be initialized in initViews)
     private var btnSubmit: Button? = null
@@ -85,6 +102,29 @@ class PetsFragment : Fragment() {
         initViews(view)
         setEvent(currentEvent)
 
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraProviderFuture.addListener(Runnable {
+            // Used to bind the lifecycle of cameras to the lifecycle owner
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Select back camera
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll()
+
+                // Bind use cases to camera
+                imageCapture = ImageCapture.Builder().build()
+
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
+
+            } catch (exc: Exception) {
+                Log.e("PetsFragment", "Use case binding failed", exc)
+            }
+
+        }, ContextCompat.getMainExecutor(requireContext()))
+
         // Return to list
         btnCancel?.setOnClickListener {
             currentEvent = PetFragmentEvent.LIST_PETS
@@ -98,32 +138,24 @@ class PetsFragment : Fragment() {
         }
 
         btnMakeImg?.setOnClickListener {
-            lifecycleScope.launch {
-                try {
-                    val width = 100
-                    val height = 100
-                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
-                    // Convert bitmap to file
-                    val file = File.createTempFile("temp", ".png", context?.cacheDir ?: File("/"))
-                    file.deleteOnExit()
-                    val fileOutputStream = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
-                    fileOutputStream.flush()
-                    fileOutputStream.close()
-
-                    // Create RequestBody and MultipartBody.Part
-                    val requestFile = file.asRequestBody("image/png".toMediaTypeOrNull())
-                    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-
-                    // Upload the file
-                    val response = mediaService.postMedia(body)
-                    Log.i("PetsFragment", "Image uploaded: ${response}")
-                } catch (e: Exception) {
-                    Log.e("PetsFragment", "Error uploading image", e)
-                }
+            try {
+                val photoFile = File.createTempFile(currentPet?.name ?: "temp", ".jpg", context?.cacheDir)
+                val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+                imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(requireContext()), object : ImageCapture.OnImageSavedCallback {
+                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                        val savedUri = Uri.fromFile(photoFile)
+                        lifecycleScope.launch {
+                            val path = uploadImage(savedUri)
+                            petImageUrl?.setText(path)
+                        }
+                    }
+                    override fun onError(exception: ImageCaptureException) {
+                        Log.e("PetsFragment", "Image capture failed", exception)
+                    }
+                })
+            } catch (e: Exception) {
+                Log.e("PetsFragment", "Error opening camera", e)
             }
-
         }
 
         // Submit form (add or edit pet)
@@ -165,6 +197,15 @@ class PetsFragment : Fragment() {
         }
 
         return view
+    }
+
+    private suspend fun uploadImage(uri: Uri?): String {
+        val file = File(uri?.path!!)
+        val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
+        val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+        val response = mediaService.postMedia(body)
+        Log.i("PetsFragment", "Image uploaded: ${response}")
+        return response.url
     }
 
     // Fetch and display pets using PetAdapter
@@ -338,6 +379,8 @@ class PetsFragment : Fragment() {
         form = view.findViewById(R.id.Pets_LinearLayout)
 
         dialog = AlertDialog.Builder(context)
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
         btnSubmit = view.findViewById(R.id.Pets_Button_Submit)
         btnCancel = view.findViewById(R.id.Pets_Button_BackToList)
