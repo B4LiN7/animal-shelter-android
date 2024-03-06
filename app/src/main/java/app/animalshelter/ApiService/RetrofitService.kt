@@ -8,16 +8,12 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitService {
-    lateinit var BASE_URL: String
-    lateinit var cookieJar: MyCookieJar
+class RetrofitService(context: Context) {
+    private val BASE_URL: String = context.resources.getString(R.string.base_url)
+    private val cookieJar: RetrofitCookieJar = RetrofitCookieJar(context)
 
-    fun initialize(context: Context) {
-        Log.i("RetrofitService", "Initializing RetrofitService...")
-        BASE_URL = context.resources.getString(R.string.base_url)
+    init {
         Log.i("RetrofitService", "BASE_URL set to: $BASE_URL")
-        cookieJar = MyCookieJar(context)
-        Log.i("RetrofitService", "CookieJar initialized")
         printCookiesToLog()
     }
 
@@ -41,7 +37,7 @@ object RetrofitService {
             Log.i("RetrofitService", "No cookies")
             return
         }
-        var cookieList: String = ""
+        var cookieList = ""
         for (cookie in cookies) {
             cookieList += "\n${cookie.name}: \"${cookie.value}\""
         }

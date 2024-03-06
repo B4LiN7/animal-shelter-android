@@ -10,10 +10,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import app.animalshelter.ApiService.Auth
+import app.animalshelter.ApiService.ApiService
 import app.animalshelter.ApiService.LoginDto
 import app.animalshelter.ApiService.RegisterDto
-import app.animalshelter.ApiService.RetrofitService
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
@@ -22,18 +21,22 @@ class LoginFragment : Fragment() {
     private var password: EditText? = null
     private var confirmPassword: EditText? = null
     private var email: EditText? = null
-    private var LoginBtn: Button? = null
-    private var RegisterBtn: Button? = null
+    private var btnLogin: Button? = null
+    private var btnRegister: Button? = null
+    private enum class AccountEvent { LOGIN, REGISTER }
     private var currentEvent: AccountEvent = AccountEvent.LOGIN
+
+    private lateinit var apiSrv: ApiService
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_login, container, false)
+        apiSrv = ApiService(requireContext())
         initViews(view)
 
-        LoginBtn?.setOnClickListener {
+        btnLogin?.setOnClickListener {
             if (currentEvent != AccountEvent.LOGIN) {
                 currentEvent = AccountEvent.LOGIN
                 setEvent(currentEvent)
@@ -48,7 +51,7 @@ class LoginFragment : Fragment() {
                 lifecycleScope.launch {
                     val loginDto = LoginDto(username, password)
                     try {
-                        val response = RetrofitService.getRetrofitService().create(Auth::class.java).login(loginDto)
+                        val response = apiSrv.authInterface.login(loginDto)
                         if (response.isSuccessful) {
                             Log.i("Login", "Login successful: ${response.body()?.string()}")
                             Toast.makeText(requireContext(), "Login successful", Toast.LENGTH_SHORT).show()
@@ -64,7 +67,7 @@ class LoginFragment : Fragment() {
             }
         }
 
-        RegisterBtn?.setOnClickListener {
+        btnRegister?.setOnClickListener {
             if (currentEvent != AccountEvent.REGISTER) {
                 currentEvent = AccountEvent.REGISTER
                 setEvent(currentEvent)
@@ -80,7 +83,7 @@ class LoginFragment : Fragment() {
                 lifecycleScope.launch {
                     val registerDto = RegisterDto(username, password, email)
                     try {
-                        val response = RetrofitService.getRetrofitService().create(Auth::class.java).register(registerDto)
+                        val response = apiSrv.authInterface.register(registerDto)
                         if (response.isSuccessful) {
                             Log.i("Register", "Register successful: ${response.body()?.string()}")
                             Toast.makeText(requireContext(), "Register successful", Toast.LENGTH_SHORT).show()
@@ -104,8 +107,8 @@ class LoginFragment : Fragment() {
         password = view.findViewById(R.id.Login_EditText_Password)
         confirmPassword = view.findViewById(R.id.Login_EditText_ConfirmPassword)
         email = view.findViewById(R.id.Login_EditText_Email)
-        LoginBtn = view.findViewById(R.id.Login_Button_Login)
-        RegisterBtn = view.findViewById(R.id.Login_Button_Register)
+        btnLogin = view.findViewById(R.id.Login_Button_Login)
+        btnRegister = view.findViewById(R.id.Login_Button_Register)
     }
 
     private fun setEvent(event: AccountEvent) {
@@ -162,9 +165,5 @@ class LoginFragment : Fragment() {
         }
 
         return username?.error == null && password?.error == null && confirmPassword?.error == null && email?.error == null
-    }
-
-    private enum class AccountEvent {
-        LOGIN, REGISTER
     }
 }

@@ -1,13 +1,9 @@
 package app.animalshelter
 
-import android.app.Activity.RESULT_OK
 import android.app.AlertDialog
-import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,19 +19,14 @@ import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.animalshelter.ApiService.Breed
-import app.animalshelter.ApiService.Media
-import app.animalshelter.ApiService.Pet
+import app.animalshelter.ApiService.ApiService
 import app.animalshelter.ApiService.PetDto
-import app.animalshelter.ApiService.RetrofitService
 import app.animalshelter.ApiService.Sex
 import app.animalshelter.ApiService.Status
 import kotlinx.coroutines.launch
@@ -43,7 +34,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZonedDateTime
@@ -88,17 +78,11 @@ class PetsFragment : Fragment() {
     private var currentEvent: PetFragmentEvent = PetFragmentEvent.LIST_PETS
     private var currentPet: PetDto? = null
 
-    // Services for fetching data
-    private val petService = RetrofitService.getRetrofitService().create(Pet::class.java)
-    private val breedService = RetrofitService.getRetrofitService().create(Breed::class.java)
-    private val mediaService = RetrofitService.getRetrofitService().create(Media::class.java)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private lateinit var apiSrv: ApiService
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
+        apiSrv = ApiService(requireContext())
         initViews(view)
         setEvent(currentEvent)
 
@@ -166,7 +150,7 @@ class PetsFragment : Fragment() {
                     lifecycleScope.launch {
                         try {
                             val dto = getFormValues()
-                            petService.createPet(dto)
+                            apiSrv.petInterface.createPet(dto)
                             Log.i("PetsFragment", "Pet added: [${dto.petId}] ${dto.name}")
                             Toast.makeText(context, "Állat hozzáadva", Toast.LENGTH_SHORT).show()
                             fetchAndDisplayPets()
@@ -180,7 +164,7 @@ class PetsFragment : Fragment() {
                     lifecycleScope.launch {
                         try {
                             val dto = getFormValues()
-                            petService.updatePet(dto.petId, dto)
+                            apiSrv.petInterface.updatePet(dto.petId, dto)
                             Log.i("PetsFragment", "Pet updated: [${dto.petId}] ${dto.name}")
                             Toast.makeText(context, "Állat szerkesztve", Toast.LENGTH_SHORT).show()
                             fetchAndDisplayPets()
@@ -203,24 +187,24 @@ class PetsFragment : Fragment() {
         val file = File(uri?.path!!)
         val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-        val response = mediaService.postMedia(body)
-        Log.i("PetsFragment", "Image uploaded: ${response}")
+        val response = apiSrv.mediaInterface.postMedia(body)
+        Log.i("PetsFragment", "Image uploaded: $response")
         return response.url
     }
 
     // Fetch and display pets using PetAdapter
     private suspend fun fetchAndDisplayPets() {
         Log.i("PetsFragment", "Start fetching and displaying pets")
-        RetrofitService.printCookiesToLog()
+        apiSrv.printCookiesToLog()
 
         Log.i("PetsFragment", "Fetching pets")
-        val petList: List<PetDto> = fetchPets()
+        val petList: List<PetDto> = apiSrv.fetchPets()
 
         Log.i("PetsFragment", "Fetching pet images")
-        val imageMap: MutableMap<Int, Bitmap> = fetchImagesForPets(petList)
+        val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)
 
         Log.i("PetsFragment", "Fetching breeds")
-        val breedMap: Map<Int, String> = fetchBreeds()
+        val breedMap: Map<Int, String> = apiSrv.fetchBreeds()
 
         Log.i("PetsFragment", "Setting up RecyclerView")
         val adapter = PetAdapter(petList, imageMap, breedMap)
@@ -232,9 +216,9 @@ class PetsFragment : Fragment() {
             val name: TextView = view.findViewById(R.id.PetItem_TextView_Name)
             val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
             val description: TextView = view.findViewById(R.id.PetItem_TextView_Description)
-            val data = view.findViewById<TextView>(R.id.PetItem_TextView_Data)
-            val editButton = view.findViewById<TextView>(R.id.PetItem_Button_Edit)
-            val deleteButton = view.findViewById<TextView>(R.id.PetItem_Button_Delete)
+            val data: TextView = view.findViewById(R.id.PetItem_TextView_Data)
+            val btnEdit: TextView = view.findViewById(R.id.PetItem_Button_Edit)
+            val btnDelete: TextView = view.findViewById(R.id.PetItem_Button_Delete)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PetViewHolder {
@@ -251,10 +235,10 @@ class PetsFragment : Fragment() {
             val image: Bitmap = images[pet.petId] ?: Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
             holder.image.setImageBitmap(image)
 
-            holder.description.text = pet.description ?: "Nincs leírás"
-            holder.data.text = "Kor: ${age ?: "Ismertelen"} | Faj: ${breeds[pet.breedId] ?: pet.breedId} | Állapot: ${pet.status ?: "Ismeretlen állapot"}"
+            holder.description.text = pet.description
+            holder.data.text = "Kor: ${age} | Faj: ${breeds[pet.breedId] ?: pet.breedId} | Állapot: ${pet.status}"
 
-            holder.editButton.setOnClickListener {
+            holder.btnEdit.setOnClickListener {
                 Log.i("PetsFragment", "Edit button clicked for pet: [${pet.petId}] ${pet.name}")
                 currentEvent = PetFragmentEvent.EDIT_PET
                 currentPet = pet
@@ -264,7 +248,7 @@ class PetsFragment : Fragment() {
                 }
             }
 
-            holder.deleteButton.setOnClickListener {
+            holder.btnDelete.setOnClickListener {
                 Log.i("PetsFragment", "Delete button clicked for pet: [${pet.petId}] ${pet.name}")
                 dialog?.setTitle("Törlés")?.setMessage("Biztosan törölni szeretné a kiválasztott, ${pet.name} nevű állatot?")
                     ?.setPositiveButton("Igen") { _, _ ->
@@ -283,13 +267,12 @@ class PetsFragment : Fragment() {
             val birthDateTime = ZonedDateTime.parse(birthDate)
             val birthDate = birthDateTime.toLocalDate()
             val now = LocalDate.now()
-            val age = Period.between(birthDate, now).years
-            return age
+            return Period.between(birthDate, now).years
         }
 
         private suspend fun deletePet(pet: PetDto) {
             try {
-                petService.deletePet(pet.petId)
+                apiSrv.petInterface.deletePet(pet.petId)
                 Log.i("PetsFragment", "Pet deleted: [${pet.petId}] ${pet.name}")
                 Toast.makeText(context, "Állat törölve", Toast.LENGTH_SHORT).show()
                 fetchAndDisplayPets()
@@ -352,8 +335,8 @@ class PetsFragment : Fragment() {
         petStatus?.setText(pet.status.description, false)
 
         val breedId = pet.breedId
-        val breed = fetchBreed(breedId)
-        petBreed?.setText(breed, false)
+        val breed = apiSrv.fetchBreed(breedId)
+        petBreed?.setText(breed.name, false)
     }
     private suspend fun getFormValues(): PetDto {
         val name = petName?.text.toString()
@@ -361,13 +344,14 @@ class PetsFragment : Fragment() {
         val birthDate = petBirthDate?.text.toString()
         val imageUrl = petImageUrl?.text.toString()
 
+        val breedId = apiSrv.fetchBreeds().entries.find { it.value == petBreed?.text.toString() }?.key ?: 0
         return PetDto(
             petId = currentPet?.petId ?: 0,
             name = name,
             description = description,
             birthDate = birthDate,
             imageUrl = imageUrl,
-            breedId = fetchBreeds().entries.find { it.value == petBreed?.text.toString() }?.key ?: 0,
+            breedId = breedId,
             sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER,
             status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
         )
@@ -406,67 +390,8 @@ class PetsFragment : Fragment() {
         }
     }
     private suspend fun initBreedAdapter() {
-        val breeds = fetchBreeds()
+        val breeds = apiSrv.fetchBreeds()
         breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breeds.values.toList())
         petBreed?.setAdapter(breedAdapter)
-    }
-
-    // Fetch pets, breeds and images for pets
-    private suspend fun fetchPets(): List<PetDto> {
-        var petList: List<PetDto> = emptyList()
-        try {
-            petList = petService.getPets()
-        } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching pets", e)
-            throw e
-        }
-        return petList
-    }
-    private suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<Int, Bitmap> {
-        val imageMap: MutableMap<Int, Bitmap> = mutableMapOf()
-        for (pet in petList) {
-            try {
-                val fullUrl = pet.imageUrl
-                val startIndex = fullUrl.indexOf("/uploads")
-                val shortUrl = fullUrl.substring(startIndex)
-
-                val image = mediaService.getMedia(shortUrl)
-
-                val inputStream = image.byteStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                imageMap[pet.petId] = bitmap
-            } catch (e: Exception) {
-                Log.e("PetsFragment", "Error fetching image for pet: [${pet.petId}] ${pet.name}")
-            }
-        }
-        return imageMap
-    }
-    private suspend fun fetchBreeds(): Map<Int, String> {
-        val breedMap: MutableMap<Int, String> = mutableMapOf()
-        try {
-            val breeds = breedService.getBreeds()
-            for (breed in breeds) {
-                breedMap[breed.breedId] = breed.name
-            }
-        } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching breeds", e)
-        }
-        return breedMap
-    }
-    private suspend fun fetchBreed(breedId: Int): String {
-        try {
-            val breed = breedService.getBreedById(breedId)
-            return breed.name
-        } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching breed with ID $breedId", e)
-            return "Ismeretlen fajta"
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        fun newInstance() {
-            PetsFragment()
-        }
     }
 }
