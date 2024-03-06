@@ -30,9 +30,6 @@ import app.animalshelter.api.PetDto
 import app.animalshelter.api.Sex
 import app.animalshelter.api.Status
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.time.LocalDate
 import java.time.Period
@@ -48,10 +45,6 @@ class PetsFragment : Fragment() {
 
     // Dialog
     private var dialog: AlertDialog.Builder? = null
-
-    // Camera
-    private lateinit var imageCapture: ImageCapture
-    private lateinit var cameraExecutor: ExecutorService
 
     // Buttons (initially null, will be initialized in initViews)
     private var btnSubmit: Button? = null
@@ -75,34 +68,31 @@ class PetsFragment : Fragment() {
 
     // Current event and pet for editing
     private enum class PetFragmentEvent { LIST_PETS, ADD_PET, EDIT_PET }
-    private var currentEvent: PetFragmentEvent = PetFragmentEvent.LIST_PETS
+    private lateinit var currentEvent: PetFragmentEvent
     private var currentPet: PetDto? = null
 
+    // Camera
+    private lateinit var imageCapture: ImageCapture
+    private lateinit var cameraExecutor: ExecutorService
+
+    // ApiService
     private lateinit var apiSrv: ApiService
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
         apiSrv = ApiService(requireContext())
+        currentEvent = PetFragmentEvent.LIST_PETS
         initViews(view)
         setEvent(currentEvent)
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener(Runnable {
-            // Used to bind the lifecycle of cameras to the lifecycle owner
+        cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Select back camera
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
             try {
-                // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
-
-                // Bind use cases to camera
                 imageCapture = ImageCapture.Builder().build()
-
                 cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
-
             } catch (exc: Exception) {
                 Log.e("PetsFragment", "Use case binding failed", exc)
             }
@@ -121,15 +111,16 @@ class PetsFragment : Fragment() {
             setEvent(currentEvent)
         }
 
+        // Make picture with camera and upload it
         btnMakeImg?.setOnClickListener {
             try {
-                val photoFile = File.createTempFile(currentPet?.name ?: "temp", ".jpg", context?.cacheDir)
+                val photoFile = File.createTempFile("${currentPet?.name}", ".jpg", requireContext().cacheDir)
                 val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
                 imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(requireContext()), object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         val savedUri = Uri.fromFile(photoFile)
                         lifecycleScope.launch {
-                            val path = uploadImage(savedUri)
+                            val path = apiSrv.uploadImage(savedUri)
                             petImageUrl?.setText(path)
                         }
                     }
@@ -181,15 +172,6 @@ class PetsFragment : Fragment() {
         }
 
         return view
-    }
-
-    private suspend fun uploadImage(uri: Uri?): String {
-        val file = File(uri?.path!!)
-        val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
-        val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-        val response = apiSrv.mediaInterface.postMedia(body)
-        Log.i("PetsFragment", "Image uploaded: $response")
-        return response.url
     }
 
     // Fetch and display pets using PetAdapter

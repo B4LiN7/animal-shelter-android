@@ -3,7 +3,12 @@ package app.animalshelter.api
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class ApiService(context: Context) {
     private val retrofitService: RetrofitService = RetrofitService(context)
@@ -11,7 +16,7 @@ class ApiService(context: Context) {
     // Create instances of the interfaces
     val petInterface: Pet = retrofitService.getRetrofitService().create(Pet::class.java)
     private val userInterface: User = retrofitService.getRetrofitService().create(User::class.java)
-    val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
+    private val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
     val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
     val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
@@ -21,7 +26,7 @@ class ApiService(context: Context) {
         try {
             adoptionList = adoptionInterface.getAdoptions()
         } catch (e: Exception) {
-            Log.e("AdoptionsFragment", "Error fetching adoptions", e)
+            Log.e("ApiService", "Error fetching adoptions", e)
         }
         return adoptionList
     }
@@ -32,7 +37,7 @@ class ApiService(context: Context) {
                 val username = userInterface.getUserName(adoption.userId)
                 usernameMap[adoption.userId] = username
             } catch (e: Exception) {
-                Log.e("AdoptionsFragment", "Error fetching username for user: [${adoption.userId}]")
+                Log.e("ApiService", "Error fetching username for user: [${adoption.userId}]")
             }
         }
         return usernameMap
@@ -42,7 +47,7 @@ class ApiService(context: Context) {
         try {
             petList = petInterface.getPets()
         } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching pets", e)
+            Log.e("ApiService", "Error fetching pets", e)
             throw e
         }
         return petList
@@ -61,7 +66,7 @@ class ApiService(context: Context) {
                 val bitmap = BitmapFactory.decodeStream(inputStream)
                 imageMap[pet.petId] = bitmap
             } catch (e: Exception) {
-                Log.e("PetsFragment", "Error fetching image for pet: [${pet.petId}] ${pet.name}")
+                Log.e("ApiService", "Error fetching image for pet: [${pet.petId}] ${pet.name}")
             }
         }
         return imageMap
@@ -74,7 +79,7 @@ class ApiService(context: Context) {
                 breedMap[breed.breedId] = breed.name
             }
         } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching breeds", e)
+            Log.e("ApiService", "Error fetching breeds", e)
         }
         return breedMap
     }
@@ -83,12 +88,30 @@ class ApiService(context: Context) {
             val breed = breedInterface.getBreedById(breedId)
             breed
         } catch (e: Exception) {
-            Log.e("PetsFragment", "Error fetching breed with ID $breedId", e)
+            Log.e("ApiService", "Error fetching breed with ID $breedId", e)
             BreedDto(-1, "Unknown", "Unknown")
+        }
+    }
+
+    suspend fun uploadImage(uri: Uri): String {
+        try {
+            val file = File(uri.path!!)
+            val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+            val response = mediaInterface.postMedia(body)
+            Log.i("ApiService", "Image uploaded: $response")
+            return response.url
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error uploading image", e)
+            throw e
         }
     }
 
     fun printCookiesToLog() {
         retrofitService.printCookiesToLog()
+    }
+
+    fun clearCookies() {
+        retrofitService.clearCookies()
     }
 }

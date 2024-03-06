@@ -1,5 +1,6 @@
 package app.animalshelter
 
+import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
@@ -19,11 +20,15 @@ import app.animalshelter.api.AdoptionStatus
 import app.animalshelter.api.AdoptionSubmitDto
 import app.animalshelter.api.ApiService
 import app.animalshelter.api.PetDto
+import app.animalshelter.api.Status
 import app.animalshelter.api.UserNameDto
 import kotlinx.coroutines.launch
 
 class AdoptionsFragment : Fragment() {
     private var recyclerView: RecyclerView? = null
+    private var dialog: AlertDialog.Builder? = null
+
+    // ApiService
     private lateinit var apiSrv: ApiService
 
     override fun onCreateView(
@@ -88,36 +93,50 @@ class AdoptionsFragment : Fragment() {
             holder.user.text = username?.username ?: "Unknown"
             holder.status.text = adoption.status.toString()
 
+            if (adoption.status == Status.ADOPTED) {
+                holder.btnFinish.visibility = View.GONE
+                holder.btnCancel.visibility = View.GONE
+            }
             holder.btnFinish.setOnClickListener {
-                lifecycleScope.launch {
-                    val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.ADOPTED))
-                    if (response.isSuccessful) {
-                        Toast.makeText(context, "Adoption finished", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Error finishing adoption", Toast.LENGTH_SHORT).show()
+                dialog?.setTitle("Adoptálás")?.setMessage("Biztosan véglegesiti a kiválasztott, ${pet?.name} nevű állat adoptálását?")
+                    ?.setPositiveButton("Igen") { _, _ ->
+                        lifecycleScope.launch {
+                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.ADOPTED))
+                            if (response.isSuccessful) {
+                                Toast.makeText(context, "Adoption finished", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Error finishing adoption", Toast.LENGTH_SHORT).show()
+                            }
+                            fetchAndDisplayAdoptions()
+                        }
                     }
-                    fetchAndDisplayAdoptions()
-                }
+                    ?.setNegativeButton("Nem") { _, _ -> }
+                    ?.show()
             }
 
             holder.btnCancel.setOnClickListener {
-                lifecycleScope.launch {
-                    val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED))
-                    if (response.isSuccessful) {
-                        Toast.makeText(context, "Adoption cancelled", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Error cancelling adoption", Toast.LENGTH_SHORT).show()
+                dialog?.setTitle("Megszakitás")?.setMessage("Biztosan törölni megszakítja a kiválasztott, ${pet?.name} állat adoptációját?")
+                    ?.setPositiveButton("Igen") { _, _ ->
+                        lifecycleScope.launch {
+                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED))
+                            if (response.isSuccessful) {
+                                Toast.makeText(context, "Adoption cancelled", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Error cancelling adoption", Toast.LENGTH_SHORT).show()
+                            }
+                            fetchAndDisplayAdoptions()
+                        }
                     }
-                    fetchAndDisplayAdoptions()
-                }
+                    ?.setNegativeButton("Nem") { _, _ -> }
+                    ?.show()
             }
         }
 
         override fun getItemCount() = adoptions.size
     }
 
-
     private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.Adoptions_RecyclerView)
+        dialog = AlertDialog.Builder(context)
     }
 }

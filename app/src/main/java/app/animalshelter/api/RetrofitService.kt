@@ -9,11 +9,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class RetrofitService(context: Context) {
-    private val BASE_URL: String = context.resources.getString(R.string.base_url)
+    private val baseUrl: String = context.resources.getString(R.string.base_url)
     private val cookieJar: RetrofitCookieJar = RetrofitCookieJar(context)
 
     init {
-        Log.i("RetrofitService", "BASE_URL set to: $BASE_URL")
+        Log.i("RetrofitService", "BASE_URL set to: $baseUrl")
         printCookiesToLog()
     }
 
@@ -25,7 +25,7 @@ class RetrofitService(context: Context) {
         client.cookieJar(cookieJar)
 
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(client.build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -42,5 +42,9 @@ class RetrofitService(context: Context) {
             cookieList += "\n${cookie.name}: \"${cookie.value}\""
         }
         Log.i("RetrofitService", "Cookies:$cookieList")
+    }
+
+    fun clearCookies() {
+        cookieJar.clearCookies()
     }
 }
