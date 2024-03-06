@@ -11,8 +11,8 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.animalshelter.ApiService.ApiService
-import app.animalshelter.ApiService.BreedDto
+import app.animalshelter.api.ApiService
+import app.animalshelter.api.BreedDto
 import kotlinx.coroutines.launch
 
 class BreedsFragment : Fragment() {

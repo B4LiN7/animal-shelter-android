@@ -14,12 +14,12 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.animalshelter.ApiService.AdoptionDto
-import app.animalshelter.ApiService.AdoptionStatus
-import app.animalshelter.ApiService.AdoptionSubmitDto
-import app.animalshelter.ApiService.ApiService
-import app.animalshelter.ApiService.PetDto
-import app.animalshelter.ApiService.UserNameDto
+import app.animalshelter.api.AdoptionDto
+import app.animalshelter.api.AdoptionStatus
+import app.animalshelter.api.AdoptionSubmitDto
+import app.animalshelter.api.ApiService
+import app.animalshelter.api.PetDto
+import app.animalshelter.api.UserNameDto
 import kotlinx.coroutines.launch
 
 class AdoptionsFragment : Fragment() {

@@ -1,4 +1,4 @@
-package app.animalshelter.ApiService
+package app.animalshelter.api
 
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody

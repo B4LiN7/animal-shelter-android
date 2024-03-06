@@ -1,4 +1,4 @@
-package app.animalshelter.ApiService
+package app.animalshelter.api
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -9,12 +9,12 @@ class ApiService(context: Context) {
     private val retrofitService: RetrofitService = RetrofitService(context)
 
     // Create instances of the interfaces
-    val petInterface = retrofitService.getRetrofitService().create(Pet::class.java)
-    val userInterface = retrofitService.getRetrofitService().create(User::class.java)
-    val mediaInterface = retrofitService.getRetrofitService().create(Media::class.java)
-    val breedInterface = retrofitService.getRetrofitService().create(Breed::class.java)
-    val authInterface = retrofitService.getRetrofitService().create(Auth::class.java)
-    val adoptionInterface = retrofitService.getRetrofitService().create(Adoption::class.java)
+    val petInterface: Pet = retrofitService.getRetrofitService().create(Pet::class.java)
+    private val userInterface: User = retrofitService.getRetrofitService().create(User::class.java)
+    val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
+    val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
+    val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
+    val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
     suspend fun fetchAdoptions(): List<AdoptionDto> {
         var adoptionList: List<AdoptionDto> = emptyList()

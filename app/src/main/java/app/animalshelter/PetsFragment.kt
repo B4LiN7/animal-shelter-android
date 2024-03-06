@@ -25,10 +25,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.animalshelter.ApiService.ApiService
-import app.animalshelter.ApiService.PetDto
-import app.animalshelter.ApiService.Sex
-import app.animalshelter.ApiService.Status
+import app.animalshelter.api.ApiService
+import app.animalshelter.api.PetDto
+import app.animalshelter.api.Sex
+import app.animalshelter.api.Status
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody

@@ -9,7 +9,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
-import app.animalshelter.ApiService.ApiService
+import app.animalshelter.api.ApiService
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.launch
 

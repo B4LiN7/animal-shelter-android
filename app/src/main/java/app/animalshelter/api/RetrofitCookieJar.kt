@@ -1,4 +1,4 @@
-package app.animalshelter.ApiService
+package app.animalshelter.api
 
 import android.content.Context
 import app.animalshelter.R

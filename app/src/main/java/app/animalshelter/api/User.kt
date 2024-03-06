@@ -1,4 +1,4 @@
-package app.animalshelter.ApiService
+package app.animalshelter.api
 
 import retrofit2.http.GET
 import retrofit2.http.Path

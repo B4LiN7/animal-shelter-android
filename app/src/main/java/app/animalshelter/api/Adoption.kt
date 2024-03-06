@@ -1,4 +1,4 @@
-package app.animalshelter.ApiService
+package app.animalshelter.api
 
 import com.google.gson.annotations.SerializedName
 import okhttp3.ResponseBody

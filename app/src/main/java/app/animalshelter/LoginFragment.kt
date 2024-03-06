@@ -10,9 +10,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import app.animalshelter.ApiService.ApiService
-import app.animalshelter.ApiService.LoginDto
-import app.animalshelter.ApiService.RegisterDto
+import app.animalshelter.api.ApiService
+import app.animalshelter.api.LoginDto
+import app.animalshelter.api.RegisterDto
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
