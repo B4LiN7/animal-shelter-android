@@ -71,17 +71,17 @@ class ApiService(context: Context) {
         }
         return imageMap
     }
-    suspend fun fetchBreeds(): Map<Int, String> {
-        val breedMap: MutableMap<Int, String> = mutableMapOf()
+    suspend fun fetchBreeds(): List<BreedDto> {
+        val breedList: List<BreedDto> = mutableListOf()
         try {
             val breeds = breedInterface.getBreeds()
             for (breed in breeds) {
-                breedMap[breed.breedId] = breed.name
+                breedList.plus(breed)
             }
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching breeds", e)
         }
-        return breedMap
+        return breedList
     }
     suspend fun fetchBreed(breedId: Int): BreedDto {
         return try {
@@ -89,7 +89,7 @@ class ApiService(context: Context) {
             breed
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching breed with ID $breedId", e)
-            BreedDto(-1, "Unknown", "Unknown")
+            BreedDto(-1, "Unknown", "Unknown", -1)
         }
     }
 

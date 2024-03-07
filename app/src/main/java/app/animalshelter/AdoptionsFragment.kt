@@ -99,7 +99,7 @@ class AdoptionsFragment : Fragment() {
             }
             holder.btnFinish.setOnClickListener {
                 dialog?.setTitle("Adoptálás")?.setMessage("Biztosan véglegesiti a kiválasztott, ${pet?.name} nevű állat adoptálását?")
-                    ?.setPositiveButton("Igen") { _, _ ->
+                    ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
                             val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.ADOPTED))
                             if (response.isSuccessful) {
@@ -110,13 +110,13 @@ class AdoptionsFragment : Fragment() {
                             fetchAndDisplayAdoptions()
                         }
                     }
-                    ?.setNegativeButton("Nem") { _, _ -> }
+                    ?.setNegativeButton(R.string.btn_no) { _, _ -> }
                     ?.show()
             }
 
             holder.btnCancel.setOnClickListener {
                 dialog?.setTitle("Megszakitás")?.setMessage("Biztosan törölni megszakítja a kiválasztott, ${pet?.name} állat adoptációját?")
-                    ?.setPositiveButton("Igen") { _, _ ->
+                    ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
                             val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED))
                             if (response.isSuccessful) {
@@ -127,7 +127,7 @@ class AdoptionsFragment : Fragment() {
                             fetchAndDisplayAdoptions()
                         }
                     }
-                    ?.setNegativeButton("Nem") { _, _ -> }
+                    ?.setNegativeButton(R.string.btn_no) { _, _ -> }
                     ?.show()
             }
         }
