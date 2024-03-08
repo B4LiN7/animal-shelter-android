@@ -36,6 +36,8 @@ class RetrofitCookieJar(private val context: Context) : CookieJar {
 
     fun clearCookies() {
         cookies = ArrayList()
+        val sharedPreferences = context.getSharedPreferences("RetrofitCookies", Context.MODE_PRIVATE)
+        sharedPreferences.edit().clear().apply()
     }
 
     fun getCookies(): List<Cookie> {

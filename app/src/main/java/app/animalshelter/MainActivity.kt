@@ -3,6 +3,7 @@ package app.animalshelter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.FrameLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
@@ -20,13 +21,15 @@ class MainActivity : AppCompatActivity() {
     private var navigationView: NavigationView? = null
     private var frameLayout: FrameLayout? = null
 
+    // API Service
     private lateinit var apiSrv: ApiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         apiSrv = ApiService(this)
+        setContentView(R.layout.activity_main)
         initViews()
+        initHeaderText()
 
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar, R.string.nav_open, R.string.nav_close
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         drawerLayout?.addDrawerListener(toggle)
         toggle.syncState()
 
+        // Navigation between fragments
         navigationView?.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_login -> {
@@ -67,13 +71,15 @@ class MainActivity : AppCompatActivity() {
 
                 R.id.nav_logout -> {
                     lifecycleScope.launch {
-                        apiSrv.authInterface.logout()
-                        Toast.makeText(this@MainActivity, "Logged out", Toast.LENGTH_SHORT).show()
+                        apiSrv.logout()
+                        initHeaderText()
                     }
                 }
             }
             true
         }
+
+        // Default fragment
         val fragment = LoginFragment()
         supportFragmentManager.beginTransaction()
             .replace(R.id.Main_FrameLayout, fragment)
@@ -85,5 +91,21 @@ class MainActivity : AppCompatActivity() {
         drawerLayout = findViewById(R.id.Main_DrawerLayout)
         navigationView = findViewById(R.id.Main_NavigationView)
         frameLayout = findViewById(R.id.Main_FrameLayout)
+    }
+    private fun initHeaderText() {
+        val headerView = navigationView?.getHeaderView(0)
+        val textView = headerView?.findViewById<TextView>(R.id.Header_TextView)
+        lifecycleScope.launch {
+            val user = apiSrv.fetchCurrentUser()
+            if (user != null) {
+                textView?.text = "Üdvözöljük, ${user.name}!"
+                var item = navigationView?.menu?.findItem(R.id.nav_logout)
+                item?.isVisible = true
+            } else {
+                textView?.text = "Üdvözöljük!"
+                var item = navigationView?.menu?.findItem(R.id.nav_logout)
+                item?.isVisible = false
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -18,8 +19,26 @@ class ApiService(context: Context) {
     private val userInterface: User = retrofitService.getRetrofitService().create(User::class.java)
     private val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
     val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
+    val speciesInterface: Species = retrofitService.getRetrofitService().create(Species::class.java)
     val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
+
+    suspend fun logout() {
+        try {
+            authInterface.logout()
+        } catch (e: Exception) {
+            clearCookies()
+            Log.e("ApiService", "Error logging out with /auth/logout. Delete cookies manually.")
+        }
+    }
+    suspend fun fetchCurrentUser(): UserDto? {
+        return try {
+            userInterface.getMe()
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error fetching current user", e)
+            null
+        }
+    }
 
     suspend fun fetchAdoptions(): List<AdoptionDto> {
         var adoptionList: List<AdoptionDto> = emptyList()
@@ -72,24 +91,39 @@ class ApiService(context: Context) {
         return imageMap
     }
     suspend fun fetchBreeds(): List<BreedDto> {
-        val breedList: List<BreedDto> = mutableListOf()
+        var breedList: List<BreedDto> = mutableListOf()
         try {
-            val breeds = breedInterface.getBreeds()
-            for (breed in breeds) {
-                breedList.plus(breed)
-            }
+            breedList = breedInterface.getBreeds()
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching breeds", e)
         }
         return breedList
     }
-    suspend fun fetchBreed(breedId: Int): BreedDto {
+    suspend fun fetchBreed(breedId: Int): BreedDto? {
         return try {
             val breed = breedInterface.getBreedById(breedId)
             breed
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching breed with ID $breedId", e)
-            BreedDto(-1, "Unknown", "Unknown", -1)
+            return null
+        }
+    }
+    suspend fun fetchSpecies(): List<SpeciesDto> {
+        var speciesList: List<SpeciesDto> = mutableListOf()
+        try {
+            speciesList = speciesInterface.getSpecies()
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error fetching species", e)
+        }
+        return speciesList
+    }
+    suspend fun fetchSpecies(speciesId: Int): SpeciesDto? {
+        return try {
+            val species = speciesInterface.getSpeciesById(speciesId)
+            species
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error fetching species with ID $speciesId", e)
+            return null
         }
     }
 
@@ -110,7 +144,6 @@ class ApiService(context: Context) {
     fun printCookiesToLog() {
         retrofitService.printCookiesToLog()
     }
-
     fun clearCookies() {
         retrofitService.clearCookies()
     }

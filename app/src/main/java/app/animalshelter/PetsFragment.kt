@@ -320,7 +320,7 @@ class PetsFragment : Fragment() {
 
         val breedId = pet.breedId
         val breed = apiSrv.fetchBreed(breedId)
-        petBreed?.setText(breed.name, false)
+        petBreed?.setText(breed?.name ?: "", false)
     }
     private suspend fun getFormValues(): PetDto {
         val name = petName?.text.toString()
