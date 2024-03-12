@@ -18,7 +18,6 @@ interface Adoption {
 data class AdoptionDto(
     val petId: Int,
     val userId: String,
-    @SerializedName("latestStatus")
     val status: Status,
 ) {}
 

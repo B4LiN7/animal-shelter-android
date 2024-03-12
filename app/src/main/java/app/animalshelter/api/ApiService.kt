@@ -120,10 +120,28 @@ class ApiService(context: Context) {
         }
         return petList
     }
+    suspend fun fetchPetsArray(pets: List<Int>): List<PetDto> {
+        var petList = mutableListOf<PetDto>()
+        for (pet in pets) {
+            try {
+                val petDto = petInterface.getPetById(pet)
+                petList = petList.plus(petDto).toMutableList()
+            } catch (e: Exception) {
+                Log.e("ApiService", "Error fetching pets", e)
+            }
+        }
+        return petList
+    }
+
     suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<Int, Bitmap> {
         val imageMap: MutableMap<Int, Bitmap> = mutableMapOf()
         for (pet in petList) {
             try {
+                if (pet.imageUrl == null) {
+                    Log.e("ApiService", "Pet don't have image: [${pet.petId}] ${pet.name}")
+                    continue
+                }
+
                 val fullUrl = pet.imageUrl
                 val startIndex = fullUrl.indexOf("/uploads")
                 val shortUrl = fullUrl.substring(startIndex)

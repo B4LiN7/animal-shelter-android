@@ -55,7 +55,7 @@ class AdoptionsFragment : Fragment() {
         val usernameMap: MutableMap<String, UserNameDto> = apiSrv.fetchUsernames(adoptionList)
 
         Log.i("AdoptionsFragment", "Fetching pets")
-        val petList: List<PetDto> = apiSrv.fetchPets()
+        val petList: List<PetDto> = apiSrv.fetchPetsArray(adoptionList.map { it.petId })
 
         Log.i("AdoptionsFragment", "Fetching pet images")
         val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)

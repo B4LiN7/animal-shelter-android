@@ -13,7 +13,7 @@ interface Pet {
     suspend fun getPets(): List<PetDto>
 
     @GET("/pet/{id}")
-    suspend fun getPetById(id: Int): PetDto
+    suspend fun getPetById(@Path("id") id: Int): PetDto
 
     @POST("/pet")
     suspend fun createPet(@Body pet: PetDto): ResponseBody
@@ -32,7 +32,7 @@ data class PetDto(
     val description: String,
     val birthDate: String,
     val breedId: Int,
-    val imageUrl: String,
+    val imageUrl: String?,
     val status: Status,
 ) {
     override fun toString(): String {
