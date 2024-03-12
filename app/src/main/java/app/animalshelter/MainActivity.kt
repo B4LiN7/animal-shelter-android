@@ -31,6 +31,14 @@ class MainActivity : AppCompatActivity() {
         initViews()
         initHeaderText()
 
+        lifecycleScope.launch {
+            val reachable = apiSrv.apiTest()
+            if (!reachable) {
+                Toast.makeText(this@MainActivity, "Nem sikerült kapcsolódni a szerverhez!", Toast.LENGTH_LONG).show()
+                finish()
+            }
+        }
+
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar, R.string.nav_open, R.string.nav_close
         )

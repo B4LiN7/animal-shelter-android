@@ -23,6 +23,23 @@ class ApiService(context: Context) {
     val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
+    suspend fun apiTest(): Boolean {
+        val apiTest: ApiTest = retrofitService.getRetrofitService().create(ApiTest::class.java)
+        return try {
+            val response = apiTest.testBaseURL()
+            if (response.isSuccessful) {
+                Log.i("ApiService", "Successfully reached base URL")
+                true
+            } else {
+                Log.e("ApiService", "Failed to reach base URL, response code: ${response.code()}")
+                true
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error reaching base URL", e)
+            false
+        }
+    }
+
     suspend fun logout() {
         try {
             authInterface.logout()

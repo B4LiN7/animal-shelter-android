@@ -1,5 +1,6 @@
 package app.animalshelter
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -55,6 +56,10 @@ class LoginFragment : Fragment() {
                         if (response.isSuccessful) {
                             Log.i("Login", "Login successful: ${response.body()?.string()}")
                             Toast.makeText(requireContext(), "Login successful", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(requireContext(), MainActivity::class.java)
+                            startActivity(intent)
+                            requireActivity().finish()
+
                         } else {
                             Log.i("Login", "Login failed: ${response.errorBody()?.string()}")
                             Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
