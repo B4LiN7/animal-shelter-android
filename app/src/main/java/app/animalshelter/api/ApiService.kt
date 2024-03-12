@@ -20,7 +20,7 @@ class ApiService(context: Context) {
     private val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
     val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
     val speciesInterface: Species = retrofitService.getRetrofitService().create(Species::class.java)
-    val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
+    private val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
     suspend fun apiTest(): Boolean {
@@ -40,12 +40,44 @@ class ApiService(context: Context) {
         }
     }
 
+    suspend fun login(username: String, password: String): Boolean {
+        return try {
+            val loginDto = LoginDto(username, password)
+            val response = authInterface.login(loginDto)
+            if (response.isSuccessful) {
+                Log.i("ApiService", "Login successful")
+                true
+            } else {
+                Log.e("ApiService", "Login failed, response code: ${response.code()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error logging in", e)
+            false
+        }
+    }
     suspend fun logout() {
         try {
             authInterface.logout()
         } catch (e: Exception) {
             clearCookies()
             Log.e("ApiService", "Error logging out with /auth/logout. Delete cookies manually.")
+        }
+    }
+    suspend fun register(username: String, password: String, email: String): Boolean {
+        val registerDto = RegisterDto(username, password, email)
+        return try {
+            val response = authInterface.register(registerDto)
+            if (response.isSuccessful) {
+                Log.i("ApiService", "Register successful: ${response.body()?.string()}")
+                true
+            } else {
+                Log.i("ApiService", "Register failed: ${response.errorBody()?.string()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error registering: ${e.message}")
+            false
         }
     }
     suspend fun fetchCurrentUser(): UserDto? {

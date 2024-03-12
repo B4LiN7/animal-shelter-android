@@ -50,23 +50,16 @@ class LoginFragment : Fragment() {
 
             if (checkInputs()) {
                 lifecycleScope.launch {
-                    val loginDto = LoginDto(username, password)
-                    try {
-                        val response = apiSrv.authInterface.login(loginDto)
-                        if (response.isSuccessful) {
-                            Log.i("Login", "Login successful: ${response.body()?.string()}")
-                            Toast.makeText(requireContext(), "Login successful", Toast.LENGTH_SHORT).show()
-                            val intent = Intent(requireContext(), MainActivity::class.java)
-                            startActivity(intent)
-                            requireActivity().finish()
+                    val successful = apiSrv.login(username, password)
+                    if (successful) {
+                        Toast.makeText(requireContext(), "Belépés sikeres", Toast.LENGTH_SHORT).show()
 
-                        } else {
-                            Log.i("Login", "Login failed: ${response.errorBody()?.string()}")
-                            Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("Login", "Error: ${e.message}")
-                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        // Reload the main activity
+                        val intent = Intent(requireContext(), MainActivity::class.java)
+                        startActivity(intent)
+                        requireActivity().finish()
+                    } else {
+                        Toast.makeText(requireContext(), "Belépés sikertelen", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -86,19 +79,15 @@ class LoginFragment : Fragment() {
 
             if (checkInputs()) {
                 lifecycleScope.launch {
-                    val registerDto = RegisterDto(username, password, email)
-                    try {
-                        val response = apiSrv.authInterface.register(registerDto)
-                        if (response.isSuccessful) {
-                            Log.i("Register", "Register successful: ${response.body()?.string()}")
-                            Toast.makeText(requireContext(), "Register successful", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Log.i("Register", "Register failed: ${response.errorBody()?.string()}")
-                            Toast.makeText(requireContext(), "Register failed", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("Register", "Error: ${e.message}")
-                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    val successful = apiSrv.register(username, password, email)
+
+                    if (successful) {
+                        Toast.makeText(requireContext(), "Sikeres regisztráció", Toast.LENGTH_SHORT).show()
+                        currentEvent = AccountEvent.LOGIN
+                        setEvent(currentEvent)
+                        clearInputs()
+                    } else {
+                        Toast.makeText(requireContext(), "Sikertelen regisztráció", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
