@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.animalshelter.api.ApiService
+import app.animalshelter.api.BreedDto
 import app.animalshelter.api.PetDto
 import app.animalshelter.api.Sex
 import app.animalshelter.api.Status
@@ -186,14 +187,14 @@ class PetsFragment : Fragment() {
         val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)
 
         Log.i("PetsFragment", "Fetching breeds")
-        val breedMap: Map<Int, String> = apiSrv.fetchBreeds()
+        val breedList: List<BreedDto> = apiSrv.fetchBreeds()
 
         Log.i("PetsFragment", "Setting up RecyclerView")
-        val adapter = PetAdapter(petList, imageMap, breedMap)
+        val adapter = PetAdapter(petList, imageMap, breedList)
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.adapter = adapter
     }
-    private inner class PetAdapter(private val pets: List<PetDto>, private val images: Map<Int, Bitmap>, private val breeds: Map<Int, String>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
+    private inner class PetAdapter(private val pets: List<PetDto>, private val images: Map<Int, Bitmap>, private val breeds: List<BreedDto>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
         inner class PetViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.PetItem_TextView_Name)
             val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
@@ -218,7 +219,8 @@ class PetsFragment : Fragment() {
             holder.image.setImageBitmap(image)
 
             holder.description.text = pet.description
-            holder.data.text = "Kor: ${age} | Faj: ${breeds[pet.breedId] ?: pet.breedId} | Állapot: ${pet.status}"
+            val breedName = breeds.find { it.breedId == pet.breedId }?.name ?: "Unknown"
+            holder.data.text = "Kor: ${age} | Faj: $breedName | Állapot: ${pet.status}"
 
             holder.btnEdit.setOnClickListener {
                 Log.i("PetsFragment", "Edit button clicked for pet: [${pet.petId}] ${pet.name}")
@@ -318,7 +320,7 @@ class PetsFragment : Fragment() {
 
         val breedId = pet.breedId
         val breed = apiSrv.fetchBreed(breedId)
-        petBreed?.setText(breed.name, false)
+        petBreed?.setText(breed?.name ?: "", false)
     }
     private suspend fun getFormValues(): PetDto {
         val name = petName?.text.toString()
@@ -326,7 +328,7 @@ class PetsFragment : Fragment() {
         val birthDate = petBirthDate?.text.toString()
         val imageUrl = petImageUrl?.text.toString()
 
-        val breedId = apiSrv.fetchBreeds().entries.find { it.value == petBreed?.text.toString() }?.key ?: 0
+        val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: 0
         return PetDto(
             petId = currentPet?.petId ?: 0,
             name = name,
@@ -373,7 +375,8 @@ class PetsFragment : Fragment() {
     }
     private suspend fun initBreedAdapter() {
         val breeds = apiSrv.fetchBreeds()
-        breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breeds.values.toList())
+        val breedList = breeds.map { it.name }
+        breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breedList)
         petBreed?.setAdapter(breedAdapter)
     }
 }

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.animalshelter.api.ApiService
 import app.animalshelter.api.BreedDto
+import app.animalshelter.api.SpeciesDto
 import kotlinx.coroutines.launch
 
 class BreedsFragment : Fragment() {
@@ -27,20 +28,15 @@ class BreedsFragment : Fragment() {
         apiSrv = ApiService(requireContext())
 
         lifecycleScope.launch {
-            apiSrv.printCookiesToLog()
-
-            val breedList: List<BreedDto>
-            Log.i("BreedsFragment", "Fetching pets")
-            try {
-                breedList = apiSrv.breedInterface.getBreeds()
-            } catch (e: Exception) {
-                Toast.makeText(context, "Failed to fetch breeds", Toast.LENGTH_SHORT).show()
-                Log.e("BreedsFragment", "Failed to fetch breeds", e)
+            val breedList = apiSrv.fetchBreeds()
+            val speciesList = apiSrv.fetchSpecies()
+            if (speciesList.isEmpty() || breedList.isEmpty()) {
+                Toast.makeText(context, "Nem sikerült lekérni a fajokat", Toast.LENGTH_SHORT).show()
                 return@launch
             }
 
             Log.i("BreedsFragment", "Setting up RecyclerView")
-            val adapter = BreedAdapter(breedList)
+            val adapter = BreedAdapter(breedList, speciesList)
             val recyclerView = view.findViewById<RecyclerView>(R.id.Breeds_RecyclerView)
             recyclerView.layoutManager = LinearLayoutManager(context)
             recyclerView.adapter = adapter
@@ -49,9 +45,10 @@ class BreedsFragment : Fragment() {
         return view
     }
 
-    class BreedAdapter(private val breeds: List<BreedDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
+    class BreedAdapter(private val breeds: List<BreedDto>, private val species: List<SpeciesDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
         class BreedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.BreedItem_TextView_Name)
+            val species: TextView = view.findViewById(R.id.BreedItem_TextView_Species)
             val description: TextView = view.findViewById(R.id.BreedItem_TextView_Description)
         }
 
@@ -62,7 +59,9 @@ class BreedsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: BreedViewHolder, position: Int) {
             val breed = breeds[position]
+            Log.i("BreedAdapter", "Binding breed: ${breed.name} wit species: ${breed.speciesId}")
             holder.name.text = breed.name
+            holder.species.text = species.find { it.speciesId == breed.speciesId }?.name ?: "Unknown"
             holder.description.text = breed.description
         }
 

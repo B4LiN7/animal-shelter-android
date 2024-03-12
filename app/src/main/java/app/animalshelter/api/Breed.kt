@@ -15,4 +15,5 @@ data class BreedDto(
     val breedId: Int,
     val name: String,
     val description: String,
+    val speciesId: Int,
 ) {}
