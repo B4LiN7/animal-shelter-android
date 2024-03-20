@@ -5,6 +5,13 @@
     android:layout_height="match_parent"
     tools:context=".AdoptionsFragment">
 
+    <TextView
+        android:id="@+id/Adoptions_TextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/Adoptions_RecyclerView"
         android:layout_width="match_parent"

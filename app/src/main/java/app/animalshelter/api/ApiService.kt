@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -194,7 +193,7 @@ class ApiService(context: Context) {
         }
     }
 
-    suspend fun uploadImage(uri: Uri): String {
+    suspend fun uploadImage(uri: Uri): String? {
         try {
             val file = File(uri.path!!)
             val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
@@ -204,7 +203,7 @@ class ApiService(context: Context) {
             return response.url
         } catch (e: Exception) {
             Log.e("ApiService", "Error uploading image", e)
-            throw e
+            return null
         }
     }
 

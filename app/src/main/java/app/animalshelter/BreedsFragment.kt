@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 
 class BreedsFragment : Fragment() {
 
+    private var textView: TextView? = null
+
     private lateinit var apiSrv: ApiService
 
     override fun onCreateView(
@@ -27,11 +29,15 @@ class BreedsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_breeds, container, false)
         apiSrv = ApiService(requireContext())
 
+        textView = view.findViewById(R.id.Breeds_TextView)
+
         lifecycleScope.launch {
             val breedList = apiSrv.fetchBreeds()
             val speciesList = apiSrv.fetchSpecies()
             if (speciesList.isEmpty() || breedList.isEmpty()) {
                 Toast.makeText(context, "Nem sikerült lekérni a fajokat", Toast.LENGTH_SHORT).show()
+                textView?.text = "Nincsenek fajok."
+                textView?.visibility = View.VISIBLE
                 return@launch
             }
 

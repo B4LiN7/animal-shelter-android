@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 
 class AdoptionsFragment : Fragment() {
     private var recyclerView: RecyclerView? = null
+    private var textView: TextView? = null
     private var dialog: AlertDialog.Builder? = null
 
     // ApiService
@@ -50,6 +51,12 @@ class AdoptionsFragment : Fragment() {
 
         Log.i("AdoptionsFragment", "Fetching adoptions")
         val adoptionList: List<AdoptionDto> = apiSrv.fetchAdoptions()
+
+        if (adoptionList.isEmpty()) {
+            textView?.text = "Nincsenek adoptációk."
+            textView?.visibility = View.VISIBLE
+            return
+        }
 
         Log.i("AdoptionsFragment", "Fetching user's names")
         val usernameMap: MutableMap<String, UserNameDto> = apiSrv.fetchUsernames(adoptionList)
@@ -137,6 +144,7 @@ class AdoptionsFragment : Fragment() {
 
     private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.Adoptions_RecyclerView)
+        textView = view.findViewById(R.id.Adoptions_TextView)
         dialog = AlertDialog.Builder(context)
     }
 }

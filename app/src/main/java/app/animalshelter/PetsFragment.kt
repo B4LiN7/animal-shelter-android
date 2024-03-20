@@ -43,6 +43,7 @@ class PetsFragment : Fragment() {
     // Form and RecyclerView
     private var recyclerView: RecyclerView? = null
     private var form: LinearLayout? = null
+    private var textView: TextView? = null
 
     // Dialog
     private var dialog: AlertDialog.Builder? = null
@@ -122,6 +123,10 @@ class PetsFragment : Fragment() {
                         val savedUri = Uri.fromFile(photoFile)
                         lifecycleScope.launch {
                             val path = apiSrv.uploadImage(savedUri)
+                            if (path == null) {
+                                Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
+                                return@launch
+                            }
                             petImageUrl?.setText(path)
                         }
                     }
@@ -182,6 +187,12 @@ class PetsFragment : Fragment() {
 
         Log.i("PetsFragment", "Fetching pets")
         val petList: List<PetDto> = apiSrv.fetchPets()
+
+        if (petList.isEmpty()) {
+            textView?.text = "Nincsenek állatok."
+            textView?.visibility = View.VISIBLE
+            return
+        }
 
         Log.i("PetsFragment", "Fetching pet images")
         val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)
@@ -345,6 +356,7 @@ class PetsFragment : Fragment() {
     private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.Pets_RecyclerView)
         form = view.findViewById(R.id.Pets_LinearLayout)
+        textView = view.findViewById(R.id.Pets_TextView)
 
         dialog = AlertDialog.Builder(context)
 
