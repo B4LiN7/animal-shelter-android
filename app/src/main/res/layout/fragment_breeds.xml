@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PetsFragment">
+    tools:context=".BreedsFragment"
+    android:orientation="vertical">
 
 
     <TextView
@@ -13,10 +14,86 @@
         android:gravity="center"
         android:visibility="gone" />
 
+    <LinearLayout
+        android:id="@+id/Breeds_LinearLayout_Form"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Név"
+            android:id="@+id/Breeds_EditText_Name" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Leirás"
+            android:id="@+id/Breeds_EditText_Description" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/Breeds_TextInputLayout_Species"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Faj"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_margin="2dp" >
+
+            <AutoCompleteTextView
+                android:id="@+id/Breeds_AutoCompleteTextView_Species"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_gravity="center" >
+
+            <Button
+                android:id="@+id/Breeds_Button_Submit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Breed/Species felvétele/szerkesztése" />
+
+            <Button
+                android:id="@+id/Breeds_Button_BackToList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vissza" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/Breeds_LinearLayout_AddButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center" >
+
+        <Button
+            android:id="@+id/Breeds_Button_AddBreed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Breed felvétele" />
+
+        <Button
+            android:id="@+id/Breeds_Button_AddSpecies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Species felvétele" />
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/Breeds_RecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical" />
 
-</FrameLayout>
+</LinearLayout>

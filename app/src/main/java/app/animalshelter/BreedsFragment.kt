@@ -6,6 +6,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -14,11 +19,37 @@ import androidx.recyclerview.widget.RecyclerView
 import app.animalshelter.api.ApiService
 import app.animalshelter.api.BreedDto
 import app.animalshelter.api.SpeciesDto
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 
 class BreedsFragment : Fragment() {
 
+    private var recyclerView: RecyclerView? = null
+    private var form: LinearLayout? = null
+    private var addEditButtons: LinearLayout? = null
     private var textView: TextView? = null
+
+    private var btnSubmit: Button? = null
+    private var btnCancel: Button? = null
+    private var btnAddBreed: Button? = null
+    private var btnAddSpecies: Button? = null
+
+    private var psName: EditText? = null
+    private var psDescription: EditText? = null
+    private var petSpecies: AutoCompleteTextView? = null
+    private var petSpeciesLayout: TextInputLayout? = null
+
+    private var speciesAdapter: ArrayAdapter<String>? = null
+
+    private enum class BreedsFragmentEvent { LIST_BREEDS, ADD_BREED, EDIT_BREED, ADD_SPECIES, EDIT_SPECIES }
+    private lateinit var currentEvent: BreedsFragmentEvent
+
+    private enum class CurrentType { BREED, SPECIES }
+    private data class CurrentEdit(
+        var type: CurrentType,
+        var id: Int
+    ) {}
+    private var currentId: CurrentEdit? = null
 
     private lateinit var apiSrv: ApiService
 
@@ -28,27 +59,54 @@ class BreedsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_breeds, container, false)
         apiSrv = ApiService(requireContext())
+        initViews(view)
+        currentEvent = BreedsFragmentEvent.LIST_BREEDS
+        setEvent(currentEvent)
 
-        textView = view.findViewById(R.id.Breeds_TextView)
+        btnAddBreed?.setOnClickListener {
+            currentEvent = BreedsFragmentEvent.ADD_BREED
+            setEvent(currentEvent)
+        }
 
-        lifecycleScope.launch {
-            val breedList = apiSrv.fetchBreeds()
-            val speciesList = apiSrv.fetchSpecies()
-            if (speciesList.isEmpty() || breedList.isEmpty()) {
-                Toast.makeText(context, "Nem sikerült lekérni a fajokat", Toast.LENGTH_SHORT).show()
-                textView?.text = "Nincsenek fajok."
-                textView?.visibility = View.VISIBLE
-                return@launch
-            }
+        btnAddSpecies?.setOnClickListener {
+            currentEvent = BreedsFragmentEvent.ADD_SPECIES
+            setEvent(currentEvent)
+        }
 
-            Log.i("BreedsFragment", "Setting up RecyclerView")
-            val adapter = BreedAdapter(breedList, speciesList)
-            val recyclerView = view.findViewById<RecyclerView>(R.id.Breeds_RecyclerView)
-            recyclerView.layoutManager = LinearLayoutManager(context)
-            recyclerView.adapter = adapter
+        btnCancel?.setOnClickListener {
+            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+            setEvent(currentEvent)
+        }
+
+        btnSubmit?.setOnClickListener {
+            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+            setEvent(currentEvent)
         }
 
         return view
+    }
+
+    private suspend fun fetchAndDisplayBreeds() {
+        Log.i("BreedsFragment", "Fetching breeds...")
+        val breedList = apiSrv.fetchBreeds()
+        Log.i("BreedsFragment", "Fetched breeds: ${breedList.size}")
+
+        Log.i("BreedsFragment", "Fetching species...")
+        val speciesList = apiSrv.fetchSpecies()
+        Log.i("BreedsFragment", "Fetched species: ${speciesList.size}")
+
+        if (speciesList.isEmpty() || breedList.isEmpty()) {
+            Log.e("BreedsFragment", "No breeds or species found")
+            Toast.makeText(context, "Nem sikerült lekérni a fajokat", Toast.LENGTH_SHORT).show()
+            textView?.text = "Nincsenek fajok."
+            textView?.visibility = View.VISIBLE
+            return
+        }
+
+        Log.i("BreedsFragment", "Setting up RecyclerView")
+        val adapter = BreedAdapter(breedList, speciesList)
+        recyclerView?.layoutManager = LinearLayoutManager(context)
+        recyclerView?.adapter = adapter
     }
 
     class BreedAdapter(private val breeds: List<BreedDto>, private val species: List<SpeciesDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
@@ -65,12 +123,101 @@ class BreedsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: BreedViewHolder, position: Int) {
             val breed = breeds[position]
-            Log.i("BreedAdapter", "Binding breed: ${breed.name} wit species: ${breed.speciesId}")
+            Log.i("BreedsFragment", "Binding breed: ${breed.name} wit species: ${breed.speciesId}")
             holder.name.text = breed.name
             holder.species.text = species.find { it.speciesId == breed.speciesId }?.name ?: "Unknown"
             holder.description.text = breed.description
         }
 
         override fun getItemCount() = breeds.size
+    }
+
+    private fun setEvent(event: BreedsFragmentEvent) {
+        Log.i("BreedsFragment", "Setting event to $event")
+        when (event) {
+            BreedsFragmentEvent.LIST_BREEDS -> {
+                form?.visibility = View.GONE
+                recyclerView?.visibility = View.VISIBLE
+                addEditButtons?.visibility = View.VISIBLE
+
+                lifecycleScope.launch {
+                    fetchAndDisplayBreeds()
+                }
+            }
+            BreedsFragmentEvent.ADD_BREED -> {
+                form?.visibility = View.VISIBLE
+                recyclerView?.visibility = View.GONE
+                addEditButtons?.visibility = View.GONE
+                petSpeciesLayout?.visibility = View.VISIBLE
+
+                resetFormValues()
+
+                btnSubmit?.text = "Breed hozzáadása"
+
+                lifecycleScope.launch {
+                    initSpeciesAdapter()
+                }
+            }
+            BreedsFragmentEvent.EDIT_BREED -> {
+                form?.visibility = View.VISIBLE
+                recyclerView?.visibility = View.GONE
+                addEditButtons?.visibility = View.GONE
+                petSpeciesLayout?.visibility = View.VISIBLE
+
+                btnSubmit?.text = "Breed módositása"
+
+                lifecycleScope.launch {
+                    initSpeciesAdapter()
+                }
+            }
+            BreedsFragmentEvent.ADD_SPECIES -> {
+                form?.visibility = View.VISIBLE
+                recyclerView?.visibility = View.GONE
+                addEditButtons?.visibility = View.GONE
+                petSpeciesLayout?.visibility = View.GONE
+
+                resetFormValues()
+
+                btnSubmit?.text = "Species hozzáadása"
+            }
+            BreedsFragmentEvent.EDIT_SPECIES -> {
+                form?.visibility = View.VISIBLE
+                recyclerView?.visibility = View.GONE
+                addEditButtons?.visibility = View.GONE
+                petSpeciesLayout?.visibility = View.GONE
+
+                btnSubmit?.text = "Species módositása"
+            }
+        }
+    }
+
+    private fun resetFormValues() {
+        psName?.setText("")
+        psDescription?.setText("")
+        petSpecies?.setText("")
+    }
+
+    private fun initViews(view: View) {
+        recyclerView = view.findViewById(R.id.Breeds_RecyclerView)
+        form = view.findViewById(R.id.Breeds_LinearLayout_Form)
+        addEditButtons = view.findViewById(R.id.Breeds_LinearLayout_AddButtons)
+        textView = view.findViewById(R.id.Breeds_TextView)
+
+        btnSubmit = view.findViewById(R.id.Breeds_Button_Submit)
+        btnCancel = view.findViewById(R.id.Breeds_Button_BackToList)
+        btnAddBreed = view.findViewById(R.id.Breeds_Button_AddBreed)
+        btnAddSpecies = view.findViewById(R.id.Breeds_Button_AddSpecies)
+
+        psName = view.findViewById(R.id.Breeds_EditText_Name)
+        psDescription = view.findViewById(R.id.Breeds_EditText_Description)
+        petSpecies = view.findViewById(R.id.Breeds_AutoCompleteTextView_Species)
+        petSpeciesLayout = view.findViewById(R.id.Breeds_TextInputLayout_Species)
+    }
+
+    private suspend fun initSpeciesAdapter() {
+        val speciesList = apiSrv.fetchSpecies()
+        val speciesNames = speciesList.map { it.name }
+        speciesAdapter = ArrayAdapter(requireContext(), R.layout.item_list, speciesNames)
+        petSpecies?.setAdapter(speciesAdapter)
     }
 }

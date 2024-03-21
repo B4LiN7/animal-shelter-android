@@ -41,7 +41,7 @@ data class PetDto(
 }
 
 enum class Sex(val description: String) {
-    OTHER("Nincs megadva"),
+    OTHER("Egyéb"),
     MALE("Him"),
     FEMALE("Nőstény");
 }
