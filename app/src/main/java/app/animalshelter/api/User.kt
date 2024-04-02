@@ -16,7 +16,6 @@ data class UserDto(
     val username: String,
     val name: String,
     val email: String,
-    val role: Role,
 ) {}
 
 data class UserNameDto(
@@ -24,9 +23,3 @@ data class UserNameDto(
     val username: String,
     val name: String,
 ) {}
-
-enum class Role {
-    ADMIN,
-    SHELTER_WORKER,
-    USER,
-}

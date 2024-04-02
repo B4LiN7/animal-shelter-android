@@ -119,7 +119,7 @@ class ApiService(context: Context) {
         }
         return petList
     }
-    suspend fun fetchPetsArray(pets: List<Int>): List<PetDto> {
+    suspend fun fetchPetsArray(pets: List<String>): List<PetDto> {
         var petList = mutableListOf<PetDto>()
         for (pet in pets) {
             try {
@@ -132,22 +132,25 @@ class ApiService(context: Context) {
         return petList
     }
 
-    suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<Int, Bitmap> {
-        val imageMap: MutableMap<Int, Bitmap> = mutableMapOf()
+    suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<String, Bitmap> {
+        val imageMap: MutableMap<String, Bitmap> = mutableMapOf()
         for (pet in petList) {
             try {
-                if (pet.imageUrl == null) {
-                    Log.e("ApiService", "Pet don't have image: [${pet.petId}] ${pet.name}")
-                    continue
+                val imageUrls = pet.imageUrls?.toList()
+                if (imageUrls != null) {
+                    if (imageUrls.isEmpty()) {
+                        Log.e("ApiService", "Pet don't have image: [${pet.petId}] ${pet.name}")
+                        continue
+                    }
                 }
 
-                val fullUrl = pet.imageUrl
-                val startIndex = fullUrl.indexOf("/uploads")
-                val shortUrl = fullUrl.substring(startIndex)
+                val fullUrl = imageUrls?.elementAt(0)
+                val startIndex = fullUrl?.indexOf("/uploads")
+                val shortUrl = fullUrl?.substring(startIndex ?:0 )
 
-                val image = mediaInterface.getMedia(shortUrl)
+                val image = shortUrl?.let { mediaInterface.getMedia(it) }
 
-                val inputStream = image.byteStream()
+                val inputStream = image?.byteStream()
                 val bitmap = BitmapFactory.decodeStream(inputStream)
                 imageMap[pet.petId] = bitmap
             } catch (e: Exception) {
@@ -165,7 +168,7 @@ class ApiService(context: Context) {
         }
         return breedList
     }
-    suspend fun fetchBreed(breedId: Int): BreedDto? {
+    suspend fun fetchBreed(breedId: String): BreedDto? {
         return try {
             val breed = breedInterface.getBreedById(breedId)
             breed
@@ -183,7 +186,7 @@ class ApiService(context: Context) {
         }
         return speciesList
     }
-    suspend fun fetchSpecies(speciesId: Int): SpeciesDto? {
+    suspend fun fetchSpecies(speciesId: String): SpeciesDto? {
         return try {
             val species = speciesInterface.getSpeciesById(speciesId)
             species

@@ -12,21 +12,21 @@ interface Breed {
     suspend fun getBreeds(): List<BreedDto>
 
     @GET("/breed/{id}")
-    suspend fun getBreedById(@Path("id") id: Int): BreedDto
+    suspend fun getBreedById(@Path("id") id: String): BreedDto
 
     @POST("/breed")
     suspend fun createBreed(@Body breed: BreedDto): BreedDto
 
     @PUT("/breed/{id}")
-    suspend fun updateBreed(@Path("id") id: Int, @Body breed: BreedDto): BreedDto
+    suspend fun updateBreed(@Path("id") id: String, @Body breed: BreedDto): BreedDto
 
     @DELETE("/breed/{id}")
-    suspend fun deleteBreed(@Path("id") id: Int): BreedDto
+    suspend fun deleteBreed(@Path("id") id: String): BreedDto
 }
 
 data class BreedDto(
-    val breedId: Int,
+    val breedId: String,
     val name: String,
     val description: String,
-    val speciesId: Int,
+    val speciesId: String,
 ) {}

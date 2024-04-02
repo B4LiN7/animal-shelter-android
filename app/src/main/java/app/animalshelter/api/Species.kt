@@ -12,20 +12,20 @@ interface Species {
     suspend fun getSpecies(): List<SpeciesDto>
 
     @GET("/species/{id}")
-    suspend fun getSpeciesById(@Path("id") id: Int): SpeciesDto
+    suspend fun getSpeciesById(@Path("id") id: String): SpeciesDto
 
     @POST("/species")
     suspend fun createSpecies(@Body species: SpeciesDto): SpeciesDto
 
     @PUT("/species/{id}")
-    suspend fun updateSpecies(@Path("id") id: Int, @Body species: SpeciesDto): SpeciesDto
+    suspend fun updateSpecies(@Path("id") id: String, @Body species: SpeciesDto): SpeciesDto
 
     @DELETE("/species/{id}")
-    suspend fun deleteSpecies(@Path("id") id: Int): SpeciesDto
+    suspend fun deleteSpecies(@Path("id") id: String): SpeciesDto
 }
 
 data class SpeciesDto(
-    val speciesId: Int,
+    val speciesId: String,
     val name: String,
     val description: String,
 )

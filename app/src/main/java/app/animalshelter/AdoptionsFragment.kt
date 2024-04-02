@@ -65,7 +65,7 @@ class AdoptionsFragment : Fragment() {
         val petList: List<PetDto> = apiSrv.fetchPetsArray(adoptionList.map { it.petId })
 
         Log.i("AdoptionsFragment", "Fetching pet images")
-        val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)
+        val imageMap: MutableMap<String, Bitmap> = apiSrv.fetchImagesForPets(petList)
 
         Log.i("AdoptionsFragment", "Setting up RecyclerView")
         val adapter = AdoptionAdapter(adoptionList, usernameMap, petList, imageMap)
@@ -73,7 +73,7 @@ class AdoptionsFragment : Fragment() {
         recyclerView?.adapter = adapter
     }
 
-    private inner class AdoptionAdapter(private val adoptions: List<AdoptionDto>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>, private val images: Map<Int, Bitmap>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
+    private inner class AdoptionAdapter(private val adoptions: List<AdoptionDto>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>, private val images: Map<String, Bitmap>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
         inner class AdoptionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val image: ImageView = view.findViewById(R.id.AdoptionItem_ImageView_Image)
             val pet: TextView = view.findViewById(R.id.AdoptionItem_TextView_Pet)
@@ -108,7 +108,7 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle("Adoptálás")?.setMessage("Biztosan véglegesiti a kiválasztott, ${pet?.name} nevű állat adoptálását?")
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.ADOPTED))
+                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED))
                             if (response.isSuccessful) {
                                 Toast.makeText(context, "Adoption finished", Toast.LENGTH_SHORT).show()
                             } else {
