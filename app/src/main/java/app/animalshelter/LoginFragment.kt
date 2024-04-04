@@ -51,7 +51,7 @@ class LoginFragment : Fragment() {
             if (checkInputs()) {
                 lifecycleScope.launch {
                     val successful = apiSrv.login(username, password)
-                    if (successful) {
+                    if (successful != null) {
                         Toast.makeText(requireContext(), "Belépés sikeres", Toast.LENGTH_SHORT).show()
 
                         // Reload the main activity

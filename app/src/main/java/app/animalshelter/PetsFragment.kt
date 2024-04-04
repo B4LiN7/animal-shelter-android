@@ -183,7 +183,6 @@ class PetsFragment : Fragment() {
     // Fetch and display pets using PetAdapter
     private suspend fun fetchAndDisplayPets() {
         Log.i("PetsFragment", "Start fetching and displaying pets")
-        apiSrv.printCookiesToLog()
 
         Log.i("PetsFragment", "Fetching pets")
         val petList: List<PetDto> = apiSrv.fetchPets()
@@ -195,7 +194,7 @@ class PetsFragment : Fragment() {
         }
 
         Log.i("PetsFragment", "Fetching pet images")
-        val imageMap: MutableMap<Int, Bitmap> = apiSrv.fetchImagesForPets(petList)
+        val imageMap: MutableMap<String, Bitmap> = apiSrv.fetchImagesForPets(petList)
 
         Log.i("PetsFragment", "Fetching breeds")
         val breedList: List<BreedDto> = apiSrv.fetchBreeds()
@@ -205,7 +204,7 @@ class PetsFragment : Fragment() {
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.adapter = adapter
     }
-    private inner class PetAdapter(private val pets: List<PetDto>, private val images: Map<Int, Bitmap>, private val breeds: List<BreedDto>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
+    private inner class PetAdapter(private val pets: List<PetDto>, private val images: Map<String, Bitmap>, private val breeds: List<BreedDto>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
         inner class PetViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.PetItem_TextView_Name)
             val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
@@ -325,7 +324,7 @@ class PetsFragment : Fragment() {
         petName?.setText(pet.name)
         petDescription?.setText(pet.description)
         petBirthDate?.setText(pet.birthDate)
-        petImageUrl?.setText(pet.imageUrl)
+        //petImageUrl?.setText(pet.imageUrls?.get(0) ?: "")
         petSex?.setText(pet.sex.description, false)
         petStatus?.setText(pet.status.description, false)
 
@@ -339,13 +338,13 @@ class PetsFragment : Fragment() {
         val birthDate = petBirthDate?.text.toString()
         val imageUrl = petImageUrl?.text.toString()
 
-        val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: 0
+        val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: ""
         return PetDto(
-            petId = currentPet?.petId ?: 0,
+            petId = currentPet?.petId ?: "",
             name = name,
             description = description,
             birthDate = birthDate,
-            imageUrl = imageUrl,
+            imageUrls = arrayOf(imageUrl, *(currentPet?.imageUrls ?: arrayOf())),
             breedId = breedId,
             sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER,
             status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN

@@ -13,26 +13,26 @@ interface Pet {
     suspend fun getPets(): List<PetDto>
 
     @GET("/pet/{id}")
-    suspend fun getPetById(@Path("id") id: Int): PetDto
+    suspend fun getPetById(@Path("id") id: String): PetDto
 
     @POST("/pet")
     suspend fun createPet(@Body pet: PetDto): ResponseBody
 
     @PUT("/pet/{id}")
-    suspend fun updatePet(@Path("id") id: Int, @Body pet: PetDto): ResponseBody
+    suspend fun updatePet(@Path("id") id: String, @Body pet: PetDto): ResponseBody
 
     @DELETE("/pet/{id}")
-    suspend fun deletePet(@Path("id") id: Int): ResponseBody
+    suspend fun deletePet(@Path("id") id: String): ResponseBody
 }
 
 data class PetDto(
-    val petId: Int,
+    val petId: String,
     val name: String,
     val sex: Sex,
     val description: String,
     val birthDate: String,
-    val breedId: Int,
-    val imageUrl: String?,
+    val breedId: String,
+    val imageUrls: Array<String>?,
     val status: Status,
 ) {
     override fun toString(): String {
@@ -51,7 +51,6 @@ enum class Status(val description: String) {
     INCOMING("Menhelyre jön"),
     INSHELTER("Menhelyen van"),
     ILL("Beteg"),
-    ADOPTING("Örökbefogadás alatt"),
     ADOPTED("Örökbe fogadva"),
     DECEASED("Elhunyt");
 }

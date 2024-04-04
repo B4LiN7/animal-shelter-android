@@ -1,16 +1,21 @@
 package app.animalshelter.api
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 class ApiService(context: Context) {
+
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     private val retrofitService: RetrofitService = RetrofitService(context)
 
     // Create instances of the interfaces
@@ -22,6 +27,12 @@ class ApiService(context: Context) {
     private val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
+    private val tokenRefresh: TokenRefresh = TokenRefresh(authInterface, sharedPreferences)
+
+    /**
+     * Simple test to check if the base URL is reachable.
+     * @return true if the base URL is reachable, false otherwise.
+     */
     suspend fun apiTest(): Boolean {
         val apiTest: ApiTest = retrofitService.getRetrofitService().create(ApiTest::class.java)
         return try {
@@ -30,7 +41,7 @@ class ApiService(context: Context) {
                 Log.i("ApiService", "Successfully reached base URL")
                 true
             } else {
-                Log.e("ApiService", "Failed to reach base URL, response code: ${response.code()}")
+                Log.e("ApiService", "Successfully reached base URL but with response code: ${response.code()}")
                 true
             }
         } catch (e: Exception) {
@@ -39,28 +50,40 @@ class ApiService(context: Context) {
         }
     }
 
-    suspend fun login(username: String, password: String): Boolean {
+    suspend fun login(username: String, password: String): AuthResponse? {
         return try {
             val loginDto = LoginDto(username, password)
             val response = authInterface.login(loginDto)
             if (response.isSuccessful) {
-                Log.i("ApiService", "Login successful")
-                true
+                val responseBody = response.body()?.string()
+                val authResponse: AuthResponse? = Gson().fromJson(responseBody, AuthResponse::class.java)
+                authResponse?.let {
+                    sharedPreferences.edit()
+                        .putString("access_token", it.accessToken)
+                        .putString("refresh_token", it.refreshToken)
+                        .apply()
+                }
+                Log.i("ApiService", "Login successful (access_token: ${authResponse?.accessToken} refresh_token: ${authResponse?.refreshToken})")
+                authResponse
             } else {
                 Log.e("ApiService", "Login failed, response code: ${response.code()}")
-                false
+                null
             }
         } catch (e: Exception) {
             Log.e("ApiService", "Error logging in", e)
-            false
+            return null
         }
     }
     suspend fun logout() {
         try {
-            authInterface.logout()
+            authInterface.logout(sharedPreferences.getString("refresh_token", "")!!)
+            sharedPreferences.edit()
+                .remove("access_token")
+                .remove("refresh_token")
+                .apply()
+            Log.e("ApiService", "Logout successful. Tokens deleted.")
         } catch (e: Exception) {
-            clearCookies()
-            Log.e("ApiService", "Error logging out with /auth/logout. Delete cookies manually.")
+            Log.e("ApiService", "Error logging out with /auth/logout. Delete tokens manually.")
         }
     }
     suspend fun register(username: String, password: String, email: String): Boolean {
@@ -119,7 +142,7 @@ class ApiService(context: Context) {
         }
         return petList
     }
-    suspend fun fetchPetsArray(pets: List<Int>): List<PetDto> {
+    suspend fun fetchPetsArray(pets: List<String>): List<PetDto> {
         var petList = mutableListOf<PetDto>()
         for (pet in pets) {
             try {
@@ -132,26 +155,29 @@ class ApiService(context: Context) {
         return petList
     }
 
-    suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<Int, Bitmap> {
-        val imageMap: MutableMap<Int, Bitmap> = mutableMapOf()
+    suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<String, Bitmap> {
+        val imageMap: MutableMap<String, Bitmap> = mutableMapOf()
         for (pet in petList) {
             try {
-                if (pet.imageUrl == null) {
-                    Log.e("ApiService", "Pet don't have image: [${pet.petId}] ${pet.name}")
-                    continue
+                val imageUrls = pet.imageUrls?.toList()
+                if (imageUrls != null) {
+                    if (imageUrls.isEmpty()) {
+                        Log.e("ApiService", "Pet ${pet.name} [${pet.petId}] don't have image")
+                        continue
+                    }
                 }
 
-                val fullUrl = pet.imageUrl
-                val startIndex = fullUrl.indexOf("/uploads")
-                val shortUrl = fullUrl.substring(startIndex)
+                val fullUrl = imageUrls?.elementAt(0)
+                val startIndex = fullUrl?.indexOf("/uploads")
+                val shortUrl = fullUrl?.substring(startIndex ?:0 )
 
-                val image = mediaInterface.getMedia(shortUrl)
+                val image = shortUrl?.let { mediaInterface.getMedia(it) }
 
-                val inputStream = image.byteStream()
+                val inputStream = image?.byteStream()
                 val bitmap = BitmapFactory.decodeStream(inputStream)
                 imageMap[pet.petId] = bitmap
             } catch (e: Exception) {
-                Log.e("ApiService", "Error fetching image for pet: [${pet.petId}] ${pet.name}")
+                Log.e("ApiService", "Error fetching pet ${pet.name} [${pet.petId}] image", e)
             }
         }
         return imageMap
@@ -165,12 +191,12 @@ class ApiService(context: Context) {
         }
         return breedList
     }
-    suspend fun fetchBreed(breedId: Int): BreedDto? {
+    suspend fun fetchBreed(breedId: String): BreedDto? {
         return try {
             val breed = breedInterface.getBreedById(breedId)
             breed
         } catch (e: Exception) {
-            Log.e("ApiService", "Error fetching breed with ID $breedId", e)
+            Log.e("ApiService", "Error fetching breed [$breedId]", e)
             return null
         }
     }
@@ -183,7 +209,7 @@ class ApiService(context: Context) {
         }
         return speciesList
     }
-    suspend fun fetchSpecies(speciesId: Int): SpeciesDto? {
+    suspend fun fetchSpecies(speciesId: String): SpeciesDto? {
         return try {
             val species = speciesInterface.getSpeciesById(speciesId)
             species
@@ -193,24 +219,24 @@ class ApiService(context: Context) {
         }
     }
 
+    /**
+     * Uploads an image to the server and returns the URL of the uploaded image.
+     * @param uri - URI of the image to upload.
+     * @return URL of the uploaded image or null if the upload failed.
+     */
     suspend fun uploadImage(uri: Uri): String? {
-        try {
+        tokenRefresh.refreshTokenIfNeeded()
+        var response: MediaPostResponse? = null
+        return try {
             val file = File(uri.path!!)
             val requestFile = file.asRequestBody("image/jpg".toMediaTypeOrNull())
             val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-            val response = mediaInterface.postMedia(body)
+            response = mediaInterface.postMedia(body)
             Log.i("ApiService", "Image uploaded: $response")
-            return response.url
+            response.url
         } catch (e: Exception) {
-            Log.e("ApiService", "Error uploading image", e)
-            return null
+            Log.e("ApiService", "Error uploading image: $response", e)
+            null
         }
-    }
-
-    fun printCookiesToLog() {
-        retrofitService.printCookiesToLog()
-    }
-    fun clearCookies() {
-        retrofitService.clearCookies()
     }
 }

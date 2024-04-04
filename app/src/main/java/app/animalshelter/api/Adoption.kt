@@ -16,19 +16,24 @@ interface Adoption {
 }
 
 data class AdoptionDto(
-    val petId: Int,
+    val adoptionId: String,
+    val petId: String,
     val userId: String,
     val status: Status,
+    val reason: String,
 ) {}
 
 data class AdoptionSubmitDto(
-    val petId: Int,
+    val petId: String,
     val userId: String,
     val status: AdoptionStatus,
+    val reason: String? = null,
+    val adoptionId: String? = null,
 ) {}
 
 enum class AdoptionStatus {
-    ADOPTING,
-    ADOPTED,
-    CANCELLED
+    PENDING,
+    REJECTED,
+    CANCELLED,
+    APPROVED,
 }

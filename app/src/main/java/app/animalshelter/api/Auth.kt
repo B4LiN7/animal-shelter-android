@@ -1,9 +1,11 @@
 package app.animalshelter.api
 
+import com.google.gson.annotations.SerializedName
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface Auth {
@@ -18,8 +20,11 @@ interface Auth {
         @Body data: LoginDto
     ): Response<ResponseBody>
 
+    @POST("/auth/refresh")
+    suspend fun refresh(@Header("Authorization") refreshToken: String): Response<ResponseBody>
+
     @GET("/auth/logout")
-    suspend fun logout(): ResponseBody
+    suspend fun logout(@Header("Authorization") refreshToken: String): ResponseBody
 }
 
 data class LoginDto(
@@ -30,5 +35,13 @@ data class LoginDto(
 data class RegisterDto(
     val username: String,
     val password: String,
-    val email: String
+    val email: String,
+)
+
+data class AuthResponse(
+    val message: String,
+    @SerializedName("access_token")
+    val accessToken: String,
+    @SerializedName("refresh_token")
+    val refreshToken: String
 )
