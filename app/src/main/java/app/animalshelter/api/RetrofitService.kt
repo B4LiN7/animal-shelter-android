@@ -1,6 +1,7 @@
 package app.animalshelter.api
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import app.animalshelter.R
 import okhttp3.OkHttpClient
@@ -8,43 +9,32 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+
+
 class RetrofitService(context: Context) {
-    private val baseUrl: String = context.resources.getString(R.string.base_url)
-    private val cookieJar: RetrofitCookieJar = RetrofitCookieJar(context)
+    companion object {
+        val BASE_URL: String = "http://10.0.2.2:3001/"
+    }
+
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
     init {
-        Log.i("RetrofitService", "BASE_URL set to: $baseUrl")
-        printCookiesToLog()
+        Log.i("RetrofitService", "BASE_URL set to: $BASE_URL")
     }
 
     fun getRetrofitService(): Retrofit {
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.BODY
-        val client = OkHttpClient.Builder()
-        client.addInterceptor(logging)
-        client.cookieJar(cookieJar)
+
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor(TokenInterceptor(sharedPreferences))
+            .build()
 
         return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(client.build())
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    fun printCookiesToLog() {
-        val cookies = cookieJar.getCookies()
-        if (cookies.isEmpty()) {
-            Log.i("RetrofitService", "No cookies")
-            return
-        }
-        var cookieList = ""
-        for (cookie in cookies) {
-            cookieList += "\n${cookie.name}: \"${cookie.value}\""
-        }
-        Log.i("RetrofitService", "Cookies:$cookieList")
-    }
-
-    fun clearCookies() {
-        cookieJar.clearCookies()
     }
 }

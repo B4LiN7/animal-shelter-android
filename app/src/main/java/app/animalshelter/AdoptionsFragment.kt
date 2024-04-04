@@ -47,7 +47,6 @@ class AdoptionsFragment : Fragment() {
 
     private suspend fun fetchAndDisplayAdoptions() {
         Log.i("AdoptionsFragment", "Start fetching and displaying pets")
-        apiSrv.printCookiesToLog()
 
         Log.i("AdoptionsFragment", "Fetching adoptions")
         val adoptionList: List<AdoptionDto> = apiSrv.fetchAdoptions()

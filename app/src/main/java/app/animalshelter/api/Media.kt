@@ -14,10 +14,10 @@ interface Media {
 
     @Multipart
     @POST("/media")
-    suspend fun postMedia(@Part file: MultipartBody.Part): MediaPostResDto
+    suspend fun postMedia(@Part file: MultipartBody.Part): MediaPostResponse
 }
 
-data class MediaPostResDto(
+data class MediaPostResponse(
     val message: String,
     val url: String,
     val name: String,

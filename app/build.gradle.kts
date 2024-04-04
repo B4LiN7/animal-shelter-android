@@ -59,6 +59,9 @@ dependencies {
     // OkHttp for extend Retrofit
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2")
 
+    // JWT
+    implementation("com.auth0.android:jwtdecode:2.0.2")
+
     // For coroutines (async)
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
 

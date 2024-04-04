@@ -183,7 +183,6 @@ class PetsFragment : Fragment() {
     // Fetch and display pets using PetAdapter
     private suspend fun fetchAndDisplayPets() {
         Log.i("PetsFragment", "Start fetching and displaying pets")
-        apiSrv.printCookiesToLog()
 
         Log.i("PetsFragment", "Fetching pets")
         val petList: List<PetDto> = apiSrv.fetchPets()
@@ -325,7 +324,7 @@ class PetsFragment : Fragment() {
         petName?.setText(pet.name)
         petDescription?.setText(pet.description)
         petBirthDate?.setText(pet.birthDate)
-        petImageUrl?.setText(pet.imageUrls?.get(0) ?: "")
+        //petImageUrl?.setText(pet.imageUrls?.get(0) ?: "")
         petSex?.setText(pet.sex.description, false)
         petStatus?.setText(pet.status.description, false)
 
@@ -345,7 +344,7 @@ class PetsFragment : Fragment() {
             name = name,
             description = description,
             birthDate = birthDate,
-            imageUrls = arrayOf(imageUrl),
+            imageUrls = arrayOf(imageUrl, *(currentPet?.imageUrls ?: arrayOf())),
             breedId = breedId,
             sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER,
             status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
