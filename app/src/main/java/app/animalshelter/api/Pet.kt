@@ -32,7 +32,7 @@ data class PetDto(
     val description: String,
     val birthDate: String,
     val breedId: String,
-    val imageUrls: Array<String>?,
+    val imageUrls: List<String>?,
     val status: Status,
 ) {
     override fun toString(): String {

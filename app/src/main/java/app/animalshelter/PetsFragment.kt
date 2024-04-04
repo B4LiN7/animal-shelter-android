@@ -337,6 +337,9 @@ class PetsFragment : Fragment() {
         val description = petDescription?.text.toString()
         val birthDate = petBirthDate?.text.toString()
         val imageUrl = petImageUrl?.text.toString()
+        val images = listOf(imageUrl, *((currentPet?.imageUrls ?: listOf()).toTypedArray()))
+        val filteredImages = images.filter { it.isNotBlank() }
+        val imageUrls = filteredImages.ifEmpty { null }
 
         val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: ""
         return PetDto(
@@ -344,7 +347,7 @@ class PetsFragment : Fragment() {
             name = name,
             description = description,
             birthDate = birthDate,
-            imageUrls = arrayOf(imageUrl, *(currentPet?.imageUrls ?: arrayOf())),
+            imageUrls = imageUrls,
             breedId = breedId,
             sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER,
             status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
