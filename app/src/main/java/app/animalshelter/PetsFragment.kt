@@ -145,28 +145,26 @@ class PetsFragment : Fragment() {
             when (currentEvent) {
                 PetFragmentEvent.ADD_PET -> {
                     lifecycleScope.launch {
-                        try {
-                            val dto = getFormValues()
-                            apiSrv.petInterface.createPet(dto)
-                            Log.i("PetsFragment", "Pet added: [${dto.petId}] ${dto.name}")
+                        val newPet = apiSrv.createPet(getFormValues())
+                        if (newPet != null) {
                             Toast.makeText(context, "Állat hozzáadva", Toast.LENGTH_SHORT).show()
-                            fetchAndDisplayPets()
-                        } catch (e: Exception) {
-                            Log.e("PetsFragment", "Error adding pet", e)
-                            Toast.makeText(context, "Nem sikerült hozzáadni az állatot", Toast.LENGTH_SHORT).show()
+                            setEvent(PetFragmentEvent.LIST_PETS)
+                        } else {
+                            Log.e("PetsFragment", "Error adding pet")
+                            Toast.makeText(context, "Nem sikerült hozzáadni az állatot: $newPet.", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
                 PetFragmentEvent.EDIT_PET -> {
                     lifecycleScope.launch {
-                        try {
-                            val dto = getFormValues()
-                            apiSrv.petInterface.updatePet(dto.petId, dto)
-                            Log.i("PetsFragment", "Pet updated: [${dto.petId}] ${dto.name}")
+                        val dto = getFormValues()
+                        val updatedPet = apiSrv.updatePet(dto.petId, dto)
+                        if (updatedPet != null) {
+                            Log.i("PetsFragment", "Pet updated: [${updatedPet.petId}] ${updatedPet.name}")
                             Toast.makeText(context, "Állat szerkesztve", Toast.LENGTH_SHORT).show()
-                            fetchAndDisplayPets()
-                        } catch (e: Exception) {
-                            Log.e("PetsFragment", "Error updating pet", e)
+                            setEvent(PetFragmentEvent.LIST_PETS)
+                        } else {
+                            Log.e("PetsFragment", "Error updating pet")
                             Toast.makeText(context, "Nem sikerült szerkeszteni az állatot", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -247,7 +245,19 @@ class PetsFragment : Fragment() {
                 dialog?.setTitle("Törlés")?.setMessage("Biztosan törölni szeretné a kiválasztott, ${pet.name} nevű állatot?")
                     ?.setPositiveButton("Igen") { _, _ ->
                         lifecycleScope.launch {
-                            deletePet(pet)
+                            val deletedPet = apiSrv.deletePet(pet.petId)
+                            if (deletedPet != null) {
+                                Log.i("PetsFragment", "Pet deleted: [${deletedPet.petId}] ${deletedPet.name}")
+                                Toast.makeText(context, "Állat törölve", Toast.LENGTH_SHORT).show()
+                                fetchAndDisplayPets()
+                            } else {
+                                Log.e("PetsFragment", "Error deleting pet")
+                                Toast.makeText(
+                                    context,
+                                    "Nem sikerült törölni az állatot (${pet.name})",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
                     ?.setNegativeButton("Nem") { _, _ -> }
@@ -262,18 +272,6 @@ class PetsFragment : Fragment() {
             val birthDate = birthDateTime.toLocalDate()
             val now = LocalDate.now()
             return Period.between(birthDate, now).years
-        }
-
-        private suspend fun deletePet(pet: PetDto) {
-            try {
-                apiSrv.petInterface.deletePet(pet.petId)
-                Log.i("PetsFragment", "Pet deleted: [${pet.petId}] ${pet.name}")
-                Toast.makeText(context, "Állat törölve", Toast.LENGTH_SHORT).show()
-                fetchAndDisplayPets()
-            } catch (e: Exception) {
-                Log.e("PetsFragment", "Error deleting pet", e)
-                Toast.makeText(context, "Nem sikerült törölni az állatot (${pet.name})", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
@@ -324,7 +322,7 @@ class PetsFragment : Fragment() {
         petName?.setText(pet.name)
         petDescription?.setText(pet.description)
         petBirthDate?.setText(pet.birthDate)
-        //petImageUrl?.setText(pet.imageUrls?.get(0) ?: "")
+        petImageUrl?.setText(pet.imageUrls?.firstOrNull() ?: "")
         petSex?.setText(pet.sex.description, false)
         petStatus?.setText(pet.status.description, false)
 

@@ -1,34 +1,34 @@
 package app.animalshelter.api
 
-import com.google.gson.annotations.SerializedName
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface Adoption {
     @GET("/adoption")
-    suspend fun getAdoptions(): List<AdoptionDto>
+    suspend fun getAdoptions(): List<AdoptionResponse>
 
-    @POST("/adoption")
-    suspend fun createAdoption(@Body data: AdoptionSubmitDto): Response<ResponseBody>
+    @PUT("/adoption/{adoptionId}")
+    suspend fun updateAdoption(@Path("adoptionId") id: String, @Body data: AdoptionDto): Response<ResponseBody>
 }
 
-data class AdoptionDto(
+data class AdoptionResponse(
     val adoptionId: String,
     val petId: String,
     val userId: String,
-    val status: Status,
+    val status: AdoptionStatus,
     val reason: String,
 ) {}
 
-data class AdoptionSubmitDto(
+data class AdoptionDto(
     val petId: String,
     val userId: String,
     val status: AdoptionStatus,
-    val reason: String? = null,
-    val adoptionId: String? = null,
+    val reason: String?,
 ) {}
 
 enum class AdoptionStatus {

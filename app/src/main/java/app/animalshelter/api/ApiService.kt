@@ -9,7 +9,6 @@ import android.util.Log
 import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
@@ -28,6 +27,10 @@ class ApiService(context: Context) {
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
     private val tokenRefresh: TokenRefresh = TokenRefresh(authInterface, sharedPreferences)
+
+    suspend fun refreshTokenIfNeeded() {
+        tokenRefresh.refreshTokenIfNeeded()
+    }
 
     /**
      * Simple test to check if the base URL is reachable.
@@ -50,6 +53,9 @@ class ApiService(context: Context) {
         }
     }
 
+    /**
+     * Logs in the user and saves the access and refresh tokens to the shared preferences.
+     */
     suspend fun login(username: String, password: String): AuthResponse? {
         return try {
             val loginDto = LoginDto(username, password)
@@ -74,18 +80,35 @@ class ApiService(context: Context) {
             return null
         }
     }
+
+    /**
+     * Logs out the user and deletes the access and refresh tokens from the shared preferences.
+     */
     suspend fun logout() {
         try {
-            authInterface.logout(sharedPreferences.getString("refresh_token", "")!!)
+            val refreshToken = sharedPreferences.getString("refresh_token", null)
+            val response = authInterface.logout("Bearer $refreshToken")
             sharedPreferences.edit()
                 .remove("access_token")
                 .remove("refresh_token")
                 .apply()
-            Log.e("ApiService", "Logout successful. Tokens deleted.")
+            if (response.isSuccessful) {
+                Log.i("ApiService", "Logout successful. Local tokens deleted.")
+            } else {
+                Log.e("ApiService", "Logout failed with /auth/logout but local tokens deleted.")
+            }
         } catch (e: Exception) {
-            Log.e("ApiService", "Error logging out with /auth/logout. Delete tokens manually.")
+            sharedPreferences.edit()
+                .remove("access_token")
+                .remove("refresh_token")
+                .apply()
+            Log.e("ApiService", "Logout request failed but local tokens deleted.", e)
         }
     }
+
+    /**
+     * Registers a new user. Not implemented in the app.
+     */
     suspend fun register(username: String, password: String, email: String): Boolean {
         val registerDto = RegisterDto(username, password, email)
         return try {
@@ -102,8 +125,13 @@ class ApiService(context: Context) {
             false
         }
     }
+
+    /**
+     * Fetches the current user from the server.
+     */
     suspend fun fetchCurrentUser(): UserDto? {
         return try {
+            tokenRefresh.refreshTokenIfNeeded()
             userInterface.getMe()
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching current user", e)
@@ -111,8 +139,8 @@ class ApiService(context: Context) {
         }
     }
 
-    suspend fun fetchAdoptions(): List<AdoptionDto> {
-        var adoptionList: List<AdoptionDto> = emptyList()
+    suspend fun fetchAdoptions(): List<AdoptionResponse> {
+        var adoptionList: List<AdoptionResponse> = emptyList()
         try {
             adoptionList = adoptionInterface.getAdoptions()
         } catch (e: Exception) {
@@ -120,7 +148,7 @@ class ApiService(context: Context) {
         }
         return adoptionList
     }
-    suspend fun fetchUsernames(adoptions: List<AdoptionDto>): MutableMap<String, UserNameDto> {
+    suspend fun fetchUsernames(adoptions: List<AdoptionResponse>): MutableMap<String, UserNameDto> {
         val usernameMap: MutableMap<String, UserNameDto> = mutableMapOf()
         for (adoption in adoptions) {
             try {
@@ -153,6 +181,60 @@ class ApiService(context: Context) {
             }
         }
         return petList
+    }
+    suspend fun createPet(pet: PetDto): PetDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = petInterface.createPet(pet)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val petResponse: PetDto? = Gson().fromJson(responseBody, PetDto::class.java)
+                Log.i("ApiService", "Pet added: $petResponse")
+                petResponse
+            } else {
+                Log.e("ApiService", "Error adding pet: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error adding pet", e)
+            null
+        }
+    }
+    suspend fun updatePet(petId: String, pet: PetDto): PetDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = petInterface.updatePet(petId, pet)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val petResponse: PetDto? = Gson().fromJson(responseBody, PetDto::class.java)
+                Log.i("ApiService", "Pet updated: $petResponse")
+                petResponse
+            } else {
+                Log.e("ApiService", "Error updating pet: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error updating pet", e)
+            null
+        }
+    }
+    suspend fun deletePet(petId: String): PetDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = petInterface.deletePet(petId)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val petResponse: PetDto? = Gson().fromJson(responseBody, PetDto::class.java)
+                Log.i("ApiService", "Pet deleted: $petResponse")
+                petResponse
+            } else {
+                Log.e("ApiService", "Error deleting pet: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error deleting pet", e)
+            null
+        }
     }
 
     suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<String, Bitmap> {
@@ -200,6 +282,44 @@ class ApiService(context: Context) {
             return null
         }
     }
+    suspend fun createBreed(breed: BreedDto): BreedDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = breedInterface.createBreed(breed)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val breedResponse: BreedDto? = Gson().fromJson(responseBody, BreedDto::class.java)
+                Log.i("ApiService", "Breed added: $breedResponse")
+                breedResponse
+            } else {
+                Log.e("ApiService", "Error adding breed: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error adding breed", e)
+            null
+        }
+    }
+    suspend fun updateBreed(breedId: String, breed: BreedDto): BreedDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = breedInterface.updateBreed(breedId, breed)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val breedResponse: BreedDto? = Gson().fromJson(responseBody, BreedDto::class.java)
+                Log.i("ApiService", "Breed updated: $breedResponse")
+                breedResponse
+            } else {
+                Log.e("ApiService", "Error updating breed: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error updating breed", e)
+            null
+        }
+    }
+
+
     suspend fun fetchSpecies(): List<SpeciesDto> {
         var speciesList: List<SpeciesDto> = mutableListOf()
         try {
@@ -216,6 +336,42 @@ class ApiService(context: Context) {
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching species with ID $speciesId", e)
             return null
+        }
+    }
+    suspend fun createSpecies(species: SpeciesDto): SpeciesDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = speciesInterface.createSpecies(species)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val speciesResponse: SpeciesDto? = Gson().fromJson(responseBody, SpeciesDto::class.java)
+                Log.i("ApiService", "Species added: $speciesResponse")
+                speciesResponse
+            } else {
+                Log.e("ApiService", "Error adding species: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error adding species", e)
+            null
+        }
+    }
+    suspend fun updateSpecies(speciesId: String, species: SpeciesDto): SpeciesDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = speciesInterface.updateSpecies(speciesId, species)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val speciesResponse: SpeciesDto? = Gson().fromJson(responseBody, SpeciesDto::class.java)
+                Log.i("ApiService", "Species updated: $speciesResponse")
+                speciesResponse
+            } else {
+                Log.e("ApiService", "Error updating species: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error updating species", e)
+            null
         }
     }
 

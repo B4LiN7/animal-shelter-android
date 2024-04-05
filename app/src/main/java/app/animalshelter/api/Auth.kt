@@ -24,7 +24,7 @@ interface Auth {
     suspend fun refresh(@Header("Authorization") refreshToken: String): Response<ResponseBody>
 
     @GET("/auth/logout")
-    suspend fun logout(@Header("Authorization") refreshToken: String): ResponseBody
+    suspend fun logout(@Header("Authorization") refreshToken: String): Response<ResponseBody>
 }
 
 data class LoginDto(

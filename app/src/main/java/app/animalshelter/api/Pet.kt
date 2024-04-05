@@ -1,6 +1,7 @@
 package app.animalshelter.api
 
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -16,13 +17,13 @@ interface Pet {
     suspend fun getPetById(@Path("id") id: String): PetDto
 
     @POST("/pet")
-    suspend fun createPet(@Body pet: PetDto): ResponseBody
+    suspend fun createPet(@Body pet: PetDto): Response<ResponseBody>
 
     @PUT("/pet/{id}")
-    suspend fun updatePet(@Path("id") id: String, @Body pet: PetDto): ResponseBody
+    suspend fun updatePet(@Path("id") id: String, @Body pet: PetDto): Response<ResponseBody>
 
     @DELETE("/pet/{id}")
-    suspend fun deletePet(@Path("id") id: String): ResponseBody
+    suspend fun deletePet(@Path("id") id: String): Response<ResponseBody>
 }
 
 data class PetDto(

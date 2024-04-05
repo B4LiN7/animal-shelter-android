@@ -28,7 +28,7 @@ class RetrofitService(context: Context) {
 
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(logging)
-            .addInterceptor(TokenInterceptor(sharedPreferences))
+            .addInterceptor(TokenInterceptor(sharedPreferences)) // Disable due to can't send refresh token
             .build()
 
         return Retrofit.Builder()

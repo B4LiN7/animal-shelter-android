@@ -43,13 +43,7 @@ class BreedsFragment : Fragment() {
 
     private enum class BreedsFragmentEvent { LIST_BREEDS, ADD_BREED, EDIT_BREED, ADD_SPECIES, EDIT_SPECIES }
     private lateinit var currentEvent: BreedsFragmentEvent
-
-    private enum class CurrentType { BREED, SPECIES }
-    private data class CurrentEdit(
-        var type: CurrentType,
-        var id: Int
-    ) {}
-    private var currentId: CurrentEdit? = null
+    private var currentBreedOrSpeciesId: String = ""
 
     private lateinit var apiSrv: ApiService
 
@@ -81,6 +75,57 @@ class BreedsFragment : Fragment() {
         btnSubmit?.setOnClickListener {
             currentEvent = BreedsFragmentEvent.LIST_BREEDS
             setEvent(currentEvent)
+        }
+
+        btnSubmit?.setOnClickListener {
+            if (!checkInputs()) {
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                val breedOrSpecies = getFormValues()
+                if (breedOrSpecies == null) {
+                    Log.e("BreedsFragment", "Form values are null")
+                }
+                else {
+                    when (currentEvent) {
+                        BreedsFragmentEvent.ADD_BREED -> {
+                            val breed = breedOrSpecies as BreedDto
+                            val newBreed = apiSrv.createBreed(breed)
+                            if (newBreed != null) {
+                                Log.i("BreedsFragment", "Created breed: ${newBreed.breedId}")
+                                return@launch
+                            }
+                            Log.i("BreedsFragment", "Created breed: ${newBreed?.breedId}")
+                            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+                            setEvent(currentEvent)
+                        }
+                        /* BreedsFragmentEvent.EDIT_BREED -> {
+                        val breed = breedOrSpecies as BreedDto
+                        val updatedBreed = apiSrv.updateBreed(breed.breedId, breed)
+                        Log.i("BreedsFragment", "Updated breed: ${updatedBreed.breedId}")
+                    }*/
+                    BreedsFragmentEvent.ADD_SPECIES -> {
+                        val species = breedOrSpecies as SpeciesDto
+                        val newSpecies = apiSrv.createSpecies(species)
+                        if (newSpecies != null) {
+                            Log.i("BreedsFragment", "Created breed: ${newSpecies.speciesId}")
+                            return@launch
+                        }
+                        Log.i("BreedsFragment", "Created breed: ${newSpecies?.speciesId}")
+                        currentEvent = BreedsFragmentEvent.LIST_BREEDS
+                        setEvent(currentEvent)
+                    }/*
+                        BreedsFragmentEvent.EDIT_SPECIES -> {
+                        val species = breedOrSpecies as SpeciesDto
+                        val updatedSpecies = apiSrv.updateSpecies(species.speciesId, species)
+                        Log.i("BreedsFragment", "Updated species: ${updatedSpecies.speciesId}")
+                    }*/
+                        else -> {
+                            Log.e("BreedsFragment", "Unknown event: $currentEvent")
+                        }
+                    }
+                }
+            }
         }
 
         return view
@@ -195,6 +240,53 @@ class BreedsFragment : Fragment() {
         psName?.setText("")
         psDescription?.setText("")
         petSpecies?.setText("")
+    }
+    private suspend fun getFormValues(): Any? {
+        val name = psName?.text.toString()
+        val description = psDescription?.text.toString()
+        val speciesId = apiSrv.fetchSpecies().find { it.name == petSpecies?.text.toString() }?.speciesId ?: ""
+
+        return when (currentEvent) {
+            BreedsFragmentEvent.ADD_BREED, BreedsFragmentEvent.EDIT_BREED -> BreedDto(currentBreedOrSpeciesId, name, description, speciesId)
+            BreedsFragmentEvent.ADD_SPECIES, BreedsFragmentEvent.EDIT_SPECIES -> SpeciesDto(currentBreedOrSpeciesId, name, description)
+            else -> null
+        }
+    }
+    private fun setFormValues(breedOrSpecies: Any) {
+        when (breedOrSpecies) {
+            is BreedDto -> {
+                psName?.setText(breedOrSpecies.name)
+                psDescription?.setText(breedOrSpecies.description)
+                petSpecies?.setText(breedOrSpecies.speciesId)
+            }
+            is SpeciesDto -> {
+                psName?.setText(breedOrSpecies.name)
+                psDescription?.setText(breedOrSpecies.description)
+            }
+        }
+    }
+
+    private fun checkInputs(): Boolean {
+        var valid = true
+
+        if (psName?.text.toString().isEmpty()) {
+            psName?.error = "Név megadása kötelező"
+            valid = false
+        }
+
+        if (psDescription?.text.toString().isEmpty()) {
+            psDescription?.error = "Leírás megadása kötelező"
+            valid = false
+        }
+
+        if (currentEvent == BreedsFragmentEvent.ADD_BREED || currentEvent == BreedsFragmentEvent.EDIT_BREED) {
+            if (petSpecies?.text.toString().isEmpty()) {
+                petSpecies?.error = "Faj megadása kötelező"
+                valid = false
+            }
+        }
+
+        return valid
     }
 
     private fun initViews(view: View) {

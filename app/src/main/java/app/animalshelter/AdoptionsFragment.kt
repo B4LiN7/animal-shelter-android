@@ -15,12 +15,11 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.animalshelter.api.AdoptionDto
+import app.animalshelter.api.AdoptionResponse
 import app.animalshelter.api.AdoptionStatus
-import app.animalshelter.api.AdoptionSubmitDto
+import app.animalshelter.api.AdoptionDto
 import app.animalshelter.api.ApiService
 import app.animalshelter.api.PetDto
-import app.animalshelter.api.Status
 import app.animalshelter.api.UserNameDto
 import kotlinx.coroutines.launch
 
@@ -49,7 +48,7 @@ class AdoptionsFragment : Fragment() {
         Log.i("AdoptionsFragment", "Start fetching and displaying pets")
 
         Log.i("AdoptionsFragment", "Fetching adoptions")
-        val adoptionList: List<AdoptionDto> = apiSrv.fetchAdoptions()
+        val adoptionList: List<AdoptionResponse> = apiSrv.fetchAdoptions()
 
         if (adoptionList.isEmpty()) {
             textView?.text = "Nincsenek adoptációk."
@@ -72,7 +71,7 @@ class AdoptionsFragment : Fragment() {
         recyclerView?.adapter = adapter
     }
 
-    private inner class AdoptionAdapter(private val adoptions: List<AdoptionDto>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>, private val images: Map<String, Bitmap>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
+    private inner class AdoptionAdapter(private val adoptions: List<AdoptionResponse>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>, private val images: Map<String, Bitmap>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
         inner class AdoptionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val image: ImageView = view.findViewById(R.id.AdoptionItem_ImageView_Image)
             val pet: TextView = view.findViewById(R.id.AdoptionItem_TextView_Pet)
@@ -91,7 +90,7 @@ class AdoptionsFragment : Fragment() {
             val adoption = adoptions[position]
             val username = usernames[adoption.userId]
             val pet = pets.find { it.petId == adoption.petId }
-
+            
             val image: Bitmap = images[pet?.petId] ?: Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
             holder.image.setImageBitmap(image)
 
@@ -99,15 +98,17 @@ class AdoptionsFragment : Fragment() {
             holder.user.text = username?.username ?: "Unknown"
             holder.status.text = adoption.status.toString()
 
-            if (adoption.status == Status.ADOPTED) {
+            if (adoption.status == AdoptionStatus.APPROVED || adoption.status == AdoptionStatus.CANCELLED || adoption.status == AdoptionStatus.REJECTED) {
                 holder.btnFinish.visibility = View.GONE
                 holder.btnCancel.visibility = View.GONE
             }
+
+
             holder.btnFinish.setOnClickListener {
                 dialog?.setTitle("Adoptálás")?.setMessage("Biztosan véglegesiti a kiválasztott, ${pet?.name} nevű állat adoptálását?")
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED))
+                            val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED, null))
                             if (response.isSuccessful) {
                                 Toast.makeText(context, "Adoption finished", Toast.LENGTH_SHORT).show()
                             } else {
@@ -124,7 +125,7 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle("Megszakitás")?.setMessage("Biztosan törölni megszakítja a kiválasztott, ${pet?.name} állat adoptációját?")
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.createAdoption(AdoptionSubmitDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED))
+                            val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED, null))
                             if (response.isSuccessful) {
                                 Toast.makeText(context, "Adoption cancelled", Toast.LENGTH_SHORT).show()
                             } else {

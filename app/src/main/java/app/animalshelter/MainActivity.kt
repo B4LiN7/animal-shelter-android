@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         apiSrv = ApiService(this)
         setContentView(R.layout.activity_main)
         initViews()
-        initHeaderText()
+        initHeader()
 
         lifecycleScope.launch {
             val reachable = apiSrv.apiTest()
@@ -80,18 +80,13 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_logout -> {
                     lifecycleScope.launch {
                         apiSrv.logout()
-                        initHeaderText()
+                        initHeader()
                     }
                 }
             }
             true
         }
 
-        // Default fragment
-        val fragment = LoginFragment()
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.Main_FrameLayout, fragment)
-            .commit()
     }
 
     private fun initViews() {
@@ -100,19 +95,28 @@ class MainActivity : AppCompatActivity() {
         navigationView = findViewById(R.id.Main_NavigationView)
         frameLayout = findViewById(R.id.Main_FrameLayout)
     }
-    private fun initHeaderText() {
+    private fun initHeader() {
         val headerView = navigationView?.getHeaderView(0)
         val textView = headerView?.findViewById<TextView>(R.id.Header_TextView)
         lifecycleScope.launch {
             val user = apiSrv.fetchCurrentUser()
             if (user != null) {
                 textView?.text = "Üdvözöljük, ${user.name}!"
-                var item = navigationView?.menu?.findItem(R.id.nav_logout)
-                item?.isVisible = true
+                var logoutItem = navigationView?.menu?.findItem(R.id.nav_logout)
+                logoutItem?.isVisible = true
+                var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
+                loginItem?.isVisible = false
             } else {
                 textView?.text = "Üdvözöljük!"
                 var item = navigationView?.menu?.findItem(R.id.nav_logout)
                 item?.isVisible = false
+                var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
+                loginItem?.isVisible = true
+
+                val fragment = LoginFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.Main_FrameLayout, fragment)
+                    .commit()
             }
         }
     }
