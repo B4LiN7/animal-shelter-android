@@ -130,8 +130,8 @@ class ApiService(context: Context) {
      * Fetches the current user from the server.
      */
     suspend fun fetchCurrentUser(): UserDto? {
+        tokenRefresh.refreshTokenIfNeeded()
         return try {
-            tokenRefresh.refreshTokenIfNeeded()
             userInterface.getMe()
         } catch (e: Exception) {
             Log.e("ApiService", "Error fetching current user", e)
@@ -140,6 +140,7 @@ class ApiService(context: Context) {
     }
 
     suspend fun fetchAdoptions(): List<AdoptionResponse> {
+        tokenRefresh.refreshTokenIfNeeded()
         var adoptionList: List<AdoptionResponse> = emptyList()
         try {
             adoptionList = adoptionInterface.getAdoptions()
@@ -149,6 +150,7 @@ class ApiService(context: Context) {
         return adoptionList
     }
     suspend fun fetchUsernames(adoptions: List<AdoptionResponse>): MutableMap<String, UserNameDto> {
+        tokenRefresh.refreshTokenIfNeeded()
         val usernameMap: MutableMap<String, UserNameDto> = mutableMapOf()
         for (adoption in adoptions) {
             try {

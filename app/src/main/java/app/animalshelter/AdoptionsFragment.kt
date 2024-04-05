@@ -88,14 +88,14 @@ class AdoptionsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: AdoptionViewHolder, position: Int) {
             val adoption = adoptions[position]
-            val username = usernames[adoption.userId]
+            val username = usernames[adoption.userId]?.name
             val pet = pets.find { it.petId == adoption.petId }
             
             val image: Bitmap = images[pet?.petId] ?: Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
             holder.image.setImageBitmap(image)
 
             holder.pet.text = pet?.name ?: "Unknown"
-            holder.user.text = username?.username ?: "Unknown"
+            holder.user.text = username ?: "Unknown"
             holder.status.text = adoption.status.toString()
 
             if (adoption.status == AdoptionStatus.APPROVED || adoption.status == AdoptionStatus.CANCELLED || adoption.status == AdoptionStatus.REJECTED) {
