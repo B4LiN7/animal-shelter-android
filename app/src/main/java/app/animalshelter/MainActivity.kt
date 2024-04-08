@@ -106,6 +106,11 @@ class MainActivity : AppCompatActivity() {
                 logoutItem?.isVisible = true
                 var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
                 loginItem?.isVisible = false
+
+                val fragment = WelcomeFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.Main_FrameLayout, fragment)
+                    .commit()
             } else {
                 textView?.text = "Üdvözöljük!"
                 var item = navigationView?.menu?.findItem(R.id.nav_logout)

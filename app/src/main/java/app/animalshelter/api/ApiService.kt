@@ -320,6 +320,24 @@ class ApiService(context: Context) {
             null
         }
     }
+    suspend fun deleteBreed(breedId: String): BreedDto? {
+        return try {
+            tokenRefresh.refreshTokenIfNeeded()
+            val response = breedInterface.deleteBreed(breedId)
+            if (response.isSuccessful) {
+                val responseBody = response.body()?.string()
+                val breedResponse: BreedDto? = Gson().fromJson(responseBody, BreedDto::class.java)
+                Log.i("ApiService", "Breed deleted: $breedResponse")
+                breedResponse
+            } else {
+                Log.e("ApiService", "Error deleting breed: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error deleting breed", e)
+            null
+        }
+    }
 
 
     suspend fun fetchSpecies(): List<SpeciesDto> {

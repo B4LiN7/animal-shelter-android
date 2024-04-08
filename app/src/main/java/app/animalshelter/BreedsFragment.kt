@@ -1,5 +1,6 @@
 package app.animalshelter
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -28,6 +29,8 @@ class BreedsFragment : Fragment() {
     private var form: LinearLayout? = null
     private var addEditButtons: LinearLayout? = null
     private var textView: TextView? = null
+
+    private var dialog: AlertDialog.Builder? = null
 
     private var btnSubmit: Button? = null
     private var btnCancel: Button? = null
@@ -99,31 +102,35 @@ class BreedsFragment : Fragment() {
                             currentEvent = BreedsFragmentEvent.LIST_BREEDS
                             setEvent(currentEvent)
                         }
-                        /* BreedsFragmentEvent.EDIT_BREED -> {
-                        val breed = breedOrSpecies as BreedDto
-                        val updatedBreed = apiSrv.updateBreed(breed.breedId, breed)
-                        Log.i("BreedsFragment", "Updated breed: ${updatedBreed.breedId}")
-                    }*/
-                    BreedsFragmentEvent.ADD_SPECIES -> {
-                        val species = breedOrSpecies as SpeciesDto
-                        val newSpecies = apiSrv.createSpecies(species)
-                        if (newSpecies != null) {
-                            Log.i("BreedsFragment", "Created breed: ${newSpecies.speciesId}")
-                            return@launch
+                        BreedsFragmentEvent.EDIT_BREED -> {
+                            val breed = breedOrSpecies as BreedDto
+                            val updatedBreed = apiSrv.updateBreed(breed.breedId, breed)
+                            Log.i("BreedsFragment", "Updated breed: ${updatedBreed?.breedId}")
+                            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+                            setEvent(currentEvent)
                         }
-                        Log.i("BreedsFragment", "Created breed: ${newSpecies?.speciesId}")
-                        currentEvent = BreedsFragmentEvent.LIST_BREEDS
-                        setEvent(currentEvent)
-                    }/*
+                        BreedsFragmentEvent.ADD_SPECIES -> {
+                            val species = breedOrSpecies as SpeciesDto
+                            val newSpecies = apiSrv.createSpecies(species)
+                            if (newSpecies != null) {
+                                Log.i("BreedsFragment", "Created breed: ${newSpecies.speciesId}")
+                                return@launch
+                            }
+                            Log.i("BreedsFragment", "Created breed: ${newSpecies?.speciesId}")
+                            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+                            setEvent(currentEvent)
+                        }
                         BreedsFragmentEvent.EDIT_SPECIES -> {
-                        val species = breedOrSpecies as SpeciesDto
-                        val updatedSpecies = apiSrv.updateSpecies(species.speciesId, species)
-                        Log.i("BreedsFragment", "Updated species: ${updatedSpecies.speciesId}")
-                    }*/
+                            val species = breedOrSpecies as SpeciesDto
+                            val updatedSpecies = apiSrv.updateSpecies(species.speciesId, species)
+                            Log.i("BreedsFragment", "Updated species: ${updatedSpecies?.speciesId}")
+                            currentEvent = BreedsFragmentEvent.LIST_BREEDS
+                            setEvent(currentEvent)
+                        }
                         else -> {
                             Log.e("BreedsFragment", "Unknown event: $currentEvent")
                         }
-                    }
+                        }
                 }
             }
         }
@@ -154,11 +161,13 @@ class BreedsFragment : Fragment() {
         recyclerView?.adapter = adapter
     }
 
-    class BreedAdapter(private val breeds: List<BreedDto>, private val species: List<SpeciesDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
-        class BreedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private inner class BreedAdapter(private val breeds: List<BreedDto>, private val species: List<SpeciesDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
+        inner class BreedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.BreedItem_TextView_Name)
             val species: TextView = view.findViewById(R.id.BreedItem_TextView_Species)
             val description: TextView = view.findViewById(R.id.BreedItem_TextView_Description)
+            val btnEdit: Button = view.findViewById(R.id.BreedItem_Button_Edit)
+            val btnDelete: Button = view.findViewById(R.id.BreedItem_Button_Delete)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BreedViewHolder {
@@ -168,10 +177,45 @@ class BreedsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: BreedViewHolder, position: Int) {
             val breed = breeds[position]
+
             Log.i("BreedsFragment", "Binding breed: ${breed.name} wit species: ${breed.speciesId}")
             holder.name.text = breed.name
             holder.species.text = species.find { it.speciesId == breed.speciesId }?.name ?: "Unknown"
             holder.description.text = breed.description
+
+            holder.btnDelete.setOnClickListener {
+            Log.i("BreedsFragment", "Deleting breed: ${breed.breedId} with name: ${breed.name}")
+            dialog?.setTitle("Törlés")?.setMessage("Biztosan törölni szeretné a kiválasztott, ${breed.name} nevű fajt?")
+            ?.setPositiveButton("Igen") { _, _ ->
+                lifecycleScope.launch {
+                    val deletedBreed = apiSrv.deleteBreed(breed.breedId) // Assuming you have a deleteBreed function in your api service
+                    if (deletedBreed != null) {
+                        Log.i("BreedsFragment", "Breed deleted: [${deletedBreed.breedId}] ${deletedBreed.name}")
+                        Toast.makeText(context, "Faj törölve", Toast.LENGTH_SHORT).show()
+                        fetchAndDisplayBreeds() // Refresh the breed list
+                    } else {
+                        Log.e("BreedsFragment", "Error deleting breed")
+                        Toast.makeText(
+                            context,
+                            "Nem sikerült törölni a fajt (${breed.name})",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            ?.setNegativeButton("Nem") { _, _ -> }
+            ?.show()
+            }
+
+            holder.btnEdit.setOnClickListener {
+                lifecycleScope.launch {
+                    currentEvent = BreedsFragmentEvent.EDIT_BREED
+                    currentBreedOrSpeciesId = breed.breedId
+                    setFormValues(breed)
+                    setEvent(currentEvent)
+                }
+
+            }
         }
 
         override fun getItemCount() = breeds.size
@@ -252,12 +296,15 @@ class BreedsFragment : Fragment() {
             else -> null
         }
     }
-    private fun setFormValues(breedOrSpecies: Any) {
+    private suspend fun setFormValues(breedOrSpecies: Any) {
         when (breedOrSpecies) {
             is BreedDto -> {
                 psName?.setText(breedOrSpecies.name)
                 psDescription?.setText(breedOrSpecies.description)
-                petSpecies?.setText(breedOrSpecies.speciesId)
+
+                val speciesId = breedOrSpecies.speciesId
+                val species = apiSrv.fetchSpecies(speciesId)
+                petSpecies?.setText(species?.name ?: "", false)
             }
             is SpeciesDto -> {
                 psName?.setText(breedOrSpecies.name)
@@ -294,6 +341,8 @@ class BreedsFragment : Fragment() {
         form = view.findViewById(R.id.Breeds_LinearLayout_Form)
         addEditButtons = view.findViewById(R.id.Breeds_LinearLayout_AddButtons)
         textView = view.findViewById(R.id.Breeds_TextView)
+
+        dialog = AlertDialog.Builder(context)
 
         btnSubmit = view.findViewById(R.id.Breeds_Button_Submit)
         btnCancel = view.findViewById(R.id.Breeds_Button_BackToList)

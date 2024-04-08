@@ -208,8 +208,8 @@ class PetsFragment : Fragment() {
             val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
             val description: TextView = view.findViewById(R.id.PetItem_TextView_Description)
             val data: TextView = view.findViewById(R.id.PetItem_TextView_Data)
-            val btnEdit: TextView = view.findViewById(R.id.PetItem_Button_Edit)
-            val btnDelete: TextView = view.findViewById(R.id.PetItem_Button_Delete)
+            val btnEdit: Button = view.findViewById(R.id.PetItem_Button_Edit)
+            val btnDelete: Button = view.findViewById(R.id.PetItem_Button_Delete)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PetViewHolder {
