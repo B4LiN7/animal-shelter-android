@@ -15,22 +15,19 @@ import java.io.File
 class ApiService(context: Context) {
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    private val retrofitService: RetrofitService = RetrofitService(context)
+    private val retrofitService: RetrofitService = RetrofitService(sharedPreferences)
 
     // Create instances of the interfaces
-    val petInterface: Pet = retrofitService.getRetrofitService().create(Pet::class.java)
+    private val petInterface: Pet = retrofitService.getRetrofitService().create(Pet::class.java)
     private val userInterface: User = retrofitService.getRetrofitService().create(User::class.java)
     private val mediaInterface: Media = retrofitService.getRetrofitService().create(Media::class.java)
-    val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
-    val speciesInterface: Species = retrofitService.getRetrofitService().create(Species::class.java)
+    private val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
+    private val speciesInterface: Species = retrofitService.getRetrofitService().create(Species::class.java)
     private val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
     private val tokenRefresh: TokenRefresh = TokenRefresh(authInterface, sharedPreferences)
 
-    suspend fun refreshTokenIfNeeded() {
-        tokenRefresh.refreshTokenIfNeeded()
-    }
 
     /**
      * Simple test to check if the base URL is reachable.

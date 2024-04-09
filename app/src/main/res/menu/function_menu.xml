@@ -18,6 +18,10 @@
         android:title="Fajok" />
 
     <item
+        android:id="@+id/nav_settings"
+        android:title="Beállitások" />
+
+    <item
         android:id="@+id/nav_logout"
         android:title="Kijelentkezés" />
 

@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
+    // Views
     private var toolbar: Toolbar? = null
     private var drawerLayout: DrawerLayout? = null
     private var navigationView: NavigationView? = null
@@ -36,7 +37,22 @@ class MainActivity : AppCompatActivity() {
             val reachable = apiSrv.apiTest()
             if (!reachable) {
                 Toast.makeText(this@MainActivity, "Nem sikerült kapcsolódni a szerverhez!", Toast.LENGTH_LONG).show()
-                finish()
+
+                var logoutItem = navigationView?.menu?.findItem(R.id.nav_logout)
+                logoutItem?.isVisible = false
+                var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
+                loginItem?.isVisible = false
+                var adoptionsItem = navigationView?.menu?.findItem(R.id.nav_adoptions)
+                adoptionsItem?.isVisible = false
+                var petsItem = navigationView?.menu?.findItem(R.id.nav_pets)
+                petsItem?.isVisible = false
+                var breedsItem = navigationView?.menu?.findItem(R.id.nav_breeds)
+                breedsItem?.isVisible = false
+
+                val fragment = SettingsFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.Main_FrameLayout, fragment)
+                    .commit()
             }
         }
 
@@ -73,6 +89,13 @@ class MainActivity : AppCompatActivity() {
 
                 R.id.nav_breeds -> {
                     val fragment = BreedsFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.Main_FrameLayout, fragment)
+                        .commit()
+                }
+
+                R.id.nav_settings -> {
+                    val fragment = SettingsFragment()
                     supportFragmentManager.beginTransaction()
                         .replace(R.id.Main_FrameLayout, fragment)
                         .commit()

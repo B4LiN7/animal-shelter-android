@@ -11,15 +11,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 
-class RetrofitService(context: Context) {
-    companion object {
-        val BASE_URL: String = "http://10.0.2.2:3001/"
-    }
-
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+class RetrofitService(private val sharedPreferences: SharedPreferences) {
+    private val baseUrl: String = sharedPreferences.getString("base_url", "http://10.0.2.2:3001/") ?: "http://10.0.2.2:3001/"
 
     init {
-        Log.i("RetrofitService", "BASE_URL set to: $BASE_URL")
+        var baseUrlText: String = baseUrl
+        if (baseUrlText.isNullOrEmpty() || !baseUrlText.startsWith("http://")) {
+            baseUrlText = "http://10.0.2.2:3001/"
+        }
+        sharedPreferences.edit().putString("base_url", baseUrlText).apply()
     }
 
     fun getRetrofitService(): Retrofit {
@@ -28,11 +28,11 @@ class RetrofitService(context: Context) {
 
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(logging)
-            .addInterceptor(TokenInterceptor(sharedPreferences)) // Disable due to can't send refresh token
+            .addInterceptor(TokenInterceptor(sharedPreferences))
             .build()
 
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
