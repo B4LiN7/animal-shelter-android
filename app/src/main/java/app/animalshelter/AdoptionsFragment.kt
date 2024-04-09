@@ -125,7 +125,7 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle("Megszakitás")?.setMessage("Biztosan törölni megszakítja a kiválasztott, ${pet?.name} állat adoptációját?")
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.CANCELLED, null))
+                            val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.REJECTED, null))
                             if (response.isSuccessful) {
                                 Toast.makeText(context, "Adoption cancelled", Toast.LENGTH_SHORT).show()
                             } else {

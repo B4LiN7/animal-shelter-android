@@ -1,7 +1,11 @@
 package app.animalshelter
 
 import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.Dialog
+import android.content.Context
 import android.graphics.Bitmap
+import android.icu.util.Calendar
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
+import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,6 +26,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,10 +41,11 @@ import java.io.File
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class PetsFragment : Fragment() {
+class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
     // Form and RecyclerView
     private var recyclerView: RecyclerView? = null
@@ -53,6 +60,7 @@ class PetsFragment : Fragment() {
     private var btnCancel: Button? = null
     private var btnAdd: Button? = null
     private var btnMakeImg: Button? = null
+    private var btnDatePicker: Button? = null
 
     // Form fields (initially null, will be initialized in initViews)
     private var petName: EditText? = null
@@ -77,8 +85,17 @@ class PetsFragment : Fragment() {
     private lateinit var imageCapture: ImageCapture
     private lateinit var cameraExecutor: ExecutorService
 
-    // ApiService
+    // API service
     private lateinit var apiSrv: ApiService
+
+    // Override for DatePickerCallback
+    override fun onDateSelected(year: Int, month: Int, day: Int) {
+        val zonedDateTime = ZonedDateTime.of(year, month + 1, day, 0, 0, 0, 0, ZonedDateTime.now().zone)
+        val localDate = zonedDateTime.toLocalDate()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formattedDate = localDate.format(formatter)
+        petBirthDate?.setText(formattedDate)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
@@ -137,6 +154,12 @@ class PetsFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("PetsFragment", "Error opening camera", e)
             }
+        }
+
+        btnDatePicker?.setOnClickListener {
+            val datePicker = DatePickerFragment()
+            datePicker.callback = this
+            datePicker.show(parentFragmentManager, "datePicker")
         }
 
         // Submit form (add or edit pet)
@@ -321,7 +344,13 @@ class PetsFragment : Fragment() {
     private suspend fun setFormValues(pet: PetDto) {
         petName?.setText(pet.name)
         petDescription?.setText(pet.description)
-        petBirthDate?.setText(pet.birthDate)
+
+        val zonedDateTime = ZonedDateTime.parse(pet.birthDate)
+        val localDate = zonedDateTime.toLocalDate()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formattedDate = localDate.format(formatter)
+        petBirthDate?.setText(formattedDate)
+
         petImageUrl?.setText(pet.imageUrls?.firstOrNull() ?: "")
         petSex?.setText(pet.sex.description, false)
         petStatus?.setText(pet.status.description, false)
@@ -366,6 +395,7 @@ class PetsFragment : Fragment() {
         btnCancel = view.findViewById(R.id.Pets_Button_BackToList)
         btnAdd = view.findViewById(R.id.Pets_Button_Add)
         btnMakeImg = view.findViewById(R.id.Pets_Button_MakeImage)
+        btnDatePicker = view.findViewById(R.id.Pets_Button_DatePicker)
 
         petName = view.findViewById(R.id.Pets_EditText_Name)
         petDescription = view.findViewById(R.id.Pets_EditText_Description)
@@ -392,3 +422,32 @@ class PetsFragment : Fragment() {
         petBreed?.setAdapter(breedAdapter)
     }
 }
+
+// Date picker dialog
+class DatePickerFragment : DialogFragment(), DatePickerDialog.OnDateSetListener {
+    interface DatePickerCallback {
+        fun onDateSelected(year: Int, month: Int, day: Int)
+    }
+
+    var callback: DatePickerCallback? = null
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        // Use the current date as the default date in the picker.
+        val c = Calendar.getInstance()
+        val year = c.get(Calendar.YEAR)
+        val month = c.get(Calendar.MONTH)
+        val day = c.get(Calendar.DAY_OF_MONTH)
+
+        // Create a new instance of DatePickerDialog and return it.
+        return DatePickerDialog(requireContext(), this, year, month, day)
+
+    }
+
+    override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
+        callback?.onDateSelected(year, month, day)
+    }
+}
+
+
+
+

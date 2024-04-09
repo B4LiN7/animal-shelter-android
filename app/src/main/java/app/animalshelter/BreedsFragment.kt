@@ -25,35 +25,39 @@ import kotlinx.coroutines.launch
 
 class BreedsFragment : Fragment() {
 
+    // Form and RecyclerView
     private var recyclerView: RecyclerView? = null
     private var form: LinearLayout? = null
     private var addEditButtons: LinearLayout? = null
     private var textView: TextView? = null
 
+    // Dialog
     private var dialog: AlertDialog.Builder? = null
 
+    // Buttons
     private var btnSubmit: Button? = null
     private var btnCancel: Button? = null
     private var btnAddBreed: Button? = null
     private var btnAddSpecies: Button? = null
 
+    // Form inputs
     private var psName: EditText? = null
     private var psDescription: EditText? = null
     private var petSpecies: AutoCompleteTextView? = null
     private var petSpeciesLayout: TextInputLayout? = null
 
+    // Adapter
     private var speciesAdapter: ArrayAdapter<String>? = null
 
+    // Events
     private enum class BreedsFragmentEvent { LIST_BREEDS, ADD_BREED, EDIT_BREED, ADD_SPECIES, EDIT_SPECIES }
     private lateinit var currentEvent: BreedsFragmentEvent
     private var currentBreedOrSpeciesId: String = ""
 
+    // API service
     private lateinit var apiSrv: ApiService
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_breeds, container, false)
         apiSrv = ApiService(requireContext())
         initViews(view)
@@ -138,6 +142,7 @@ class BreedsFragment : Fragment() {
         return view
     }
 
+    // Fetch breeds and display them in the RecyclerView
     private suspend fun fetchAndDisplayBreeds() {
         Log.i("BreedsFragment", "Fetching breeds...")
         val breedList = apiSrv.fetchBreeds()
@@ -160,7 +165,6 @@ class BreedsFragment : Fragment() {
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.adapter = adapter
     }
-
     private inner class BreedAdapter(private val breeds: List<BreedDto>, private val species: List<SpeciesDto>) : RecyclerView.Adapter<BreedAdapter.BreedViewHolder>() {
         inner class BreedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.BreedItem_TextView_Name)
@@ -221,6 +225,7 @@ class BreedsFragment : Fragment() {
         override fun getItemCount() = breeds.size
     }
 
+    // Set the event and update the UI accordingly
     private fun setEvent(event: BreedsFragmentEvent) {
         Log.i("BreedsFragment", "Setting event to $event")
         when (event) {
@@ -280,6 +285,7 @@ class BreedsFragment : Fragment() {
         }
     }
 
+    // Reset, get, set and check form values
     private fun resetFormValues() {
         psName?.setText("")
         psDescription?.setText("")
@@ -313,6 +319,7 @@ class BreedsFragment : Fragment() {
         }
     }
 
+    // Check if the form inputs are valid
     private fun checkInputs(): Boolean {
         var valid = true
 
@@ -336,6 +343,7 @@ class BreedsFragment : Fragment() {
         return valid
     }
 
+    // Initialize views
     private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.Breeds_RecyclerView)
         form = view.findViewById(R.id.Breeds_LinearLayout_Form)
@@ -354,7 +362,6 @@ class BreedsFragment : Fragment() {
         petSpecies = view.findViewById(R.id.Breeds_AutoCompleteTextView_Species)
         petSpeciesLayout = view.findViewById(R.id.Breeds_TextInputLayout_Species)
     }
-
     private suspend fun initSpeciesAdapter() {
         val speciesList = apiSrv.fetchSpecies()
         val speciesNames = speciesList.map { it.name }

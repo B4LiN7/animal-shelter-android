@@ -48,11 +48,28 @@
             android:layout_height="wrap_content"
             android:hint="Leirás" />
 
-        <EditText
-            android:id="@+id/Pets_EditText_BirthDate"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Születési dátum" />
+            android:orientation="horizontal" >
+
+            <EditText
+                android:id="@+id/Pets_EditText_BirthDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:layout_weight="1"
+                android:hint="Születési dátum" />
+
+            <Button
+                android:id="@+id/Pets_Button_DatePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dátum kiválasztása" />
+
+        </LinearLayout>
+
+
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
