@@ -1,8 +1,12 @@
 <resources>
     <string name="app_name">AnimalShelter</string>
-    <string name="base_url">http://10.0.2.2:3001/</string>
     <string name="nav_open">Navigációs menü kinyitása</string>
     <string name="nav_close">Navigációs menü bezárása</string>
     <string name="btn_yes">Igen</string>
     <string name="btn_no">Nem</string>
+    <string name="btn_back">Vissza</string>
+    <string name="alert_cancel">Megszakitás</string>
+    <string name="adoptions">Adoptálás</string>
+    <string name="adoptions_alert_finalize_adoption">Biztosan véglegesiti a kiválasztott, %s nevű állat adoptálását?</string>
+    <string name="adoptions_alert_reject_adoption">Biztosan elutasítja a kiválasztott, %s nevű állat adoptálását?</string>
 </resources>

@@ -15,6 +15,7 @@ import java.io.File
 class ApiService(context: Context) {
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    private val baseUrl: String? = sharedPreferences.getString("base_url", "http://10.0.2.2:3001/")
     private val retrofitService: RetrofitService = RetrofitService(sharedPreferences)
 
     // Create instances of the interfaces
@@ -263,6 +264,20 @@ class ApiService(context: Context) {
         }
         return imageMap
     }
+    suspend fun fetchImage(path: String): Bitmap? {
+        return try {
+            val startIndex = path.indexOf("/uploads")
+            val shortUrl = path.substring(startIndex ?:0 )
+            val image = mediaInterface.getMedia(shortUrl)
+            val inputStream = image.byteStream()
+            Log.i("ApiService", "Image fetched from $path")
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error fetching image from $path", e)
+            null
+        }
+    }
+
     suspend fun fetchBreeds(): List<BreedDto> {
         var breedList: List<BreedDto> = mutableListOf()
         try {

@@ -8,6 +8,8 @@ import android.graphics.Bitmap
 import android.icu.util.Calendar
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -60,21 +62,25 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     private var btnCancel: Button? = null
     private var btnAdd: Button? = null
     private var btnMakeImg: Button? = null
+    private var btnDeleteImg: Button? = null
     private var btnDatePicker: Button? = null
 
     // Form fields (initially null, will be initialized in initViews)
     private var petName: EditText? = null
     private var petDescription: EditText? = null
     private var petBirthDate: EditText? = null
-    private var petImageUrl: EditText? = null
+    private var petImageUrls: AutoCompleteTextView? = null
     private var petBreed: AutoCompleteTextView? = null
     private var petSex: AutoCompleteTextView? = null
     private var petStatus: AutoCompleteTextView? = null
+
+    private var selectedImage: ImageView? = null
 
     // Form field adapters
     private var sexAdapter: ArrayAdapter<String>? = null
     private var statusAdapter: ArrayAdapter<String>? = null
     private var breedAdapter: ArrayAdapter<String>? = null
+    private var imageUrlsAdapter: ArrayAdapter<String>? = null
 
     // Current event and pet for editing
     private enum class PetFragmentEvent { LIST_PETS, ADD_PET, EDIT_PET }
@@ -100,10 +106,21 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
         apiSrv = ApiService(requireContext())
-        currentEvent = PetFragmentEvent.LIST_PETS
         initViews(view)
+        currentEvent = PetFragmentEvent.LIST_PETS
         setEvent(currentEvent)
 
+        // Cancel and add buttons (using setEvent)
+        btnCancel?.setOnClickListener {
+            currentEvent = PetFragmentEvent.LIST_PETS
+            setEvent(currentEvent)
+        }
+        btnAdd?.setOnClickListener {
+            currentEvent = PetFragmentEvent.ADD_PET
+            setEvent(currentEvent)
+        }
+
+        // Thing for camera (I don't know what it does but work)
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -117,18 +134,6 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             }
 
         }, ContextCompat.getMainExecutor(requireContext()))
-
-        // Return to list
-        btnCancel?.setOnClickListener {
-            currentEvent = PetFragmentEvent.LIST_PETS
-            setEvent(currentEvent)
-        }
-
-        // Open form for adding new pet
-        btnAdd?.setOnClickListener {
-            currentEvent = PetFragmentEvent.ADD_PET
-            setEvent(currentEvent)
-        }
 
         // Make picture with camera and upload it
         btnMakeImg?.setOnClickListener {
@@ -144,7 +149,10 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                                 Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
                                 return@launch
                             }
-                            petImageUrl?.setText(path)
+                            val updatedImageUrls = currentPet?.imageUrls?.toMutableList()
+                            updatedImageUrls?.add(path)
+                            currentPet?.imageUrls = updatedImageUrls
+                            setImageUrlsAdapter(currentPet?.imageUrls ?: listOf())
                         }
                     }
                     override fun onError(exception: ImageCaptureException) {
@@ -156,6 +164,32 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             }
         }
 
+        // Delete selected image url from list
+        btnDeleteImg?.setOnClickListener {
+            val imageUrl = petImageUrls?.text.toString()
+            val updatedImageUrls = currentPet?.imageUrls?.toMutableList()
+            updatedImageUrls?.remove(imageUrl)
+            currentPet?.imageUrls = updatedImageUrls
+            setImageUrlsAdapter(updatedImageUrls ?: listOf())
+        }
+
+        petImageUrls?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                // Code here will execute before the text changes
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                // Toast.makeText(context, "Text changed to $s", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun afterTextChanged(s: Editable) {
+                lifecycleScope.launch {
+                    selectedImage?.setImageBitmap(apiSrv.fetchImage(s.toString()))
+                }
+            }
+        })
+
+        // Open date picker dialog
         btnDatePicker?.setOnClickListener {
             val datePicker = DatePickerFragment()
             datePicker.callback = this
@@ -266,7 +300,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             holder.btnDelete.setOnClickListener {
                 Log.i("PetsFragment", "Delete button clicked for pet: [${pet.petId}] ${pet.name}")
                 dialog?.setTitle("Törlés")?.setMessage("Biztosan törölni szeretné a kiválasztott, ${pet.name} nevű állatot?")
-                    ?.setPositiveButton("Igen") { _, _ ->
+                    ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
                             val deletedPet = apiSrv.deletePet(pet.petId)
                             if (deletedPet != null) {
@@ -283,7 +317,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                             }
                         }
                     }
-                    ?.setNegativeButton("Nem") { _, _ -> }
+                    ?.setNegativeButton(R.string.btn_no) { _, _ -> }
                     ?.show()
             }
         }
@@ -336,7 +370,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         petName?.setText("")
         petDescription?.setText("")
         petBirthDate?.setText("")
-        petImageUrl?.setText("")
+        petImageUrls?.setText("")
         petBreed?.setText("")
         petSex?.setText("")
         petStatus?.setText("")
@@ -351,7 +385,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         val formattedDate = localDate.format(formatter)
         petBirthDate?.setText(formattedDate)
 
-        petImageUrl?.setText(pet.imageUrls?.firstOrNull() ?: "")
+        setImageUrlsAdapter(pet.imageUrls ?: listOf())
+
         petSex?.setText(pet.sex.description, false)
         petStatus?.setText(pet.status.description, false)
 
@@ -359,26 +394,33 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         val breed = apiSrv.fetchBreed(breedId)
         petBreed?.setText(breed?.name ?: "", false)
     }
-    private suspend fun getFormValues(): PetDto {
+    private suspend fun getFormValues(petId: String = ""): PetDto {
         val name = petName?.text.toString()
         val description = petDescription?.text.toString()
         val birthDate = petBirthDate?.text.toString()
-        val imageUrl = petImageUrl?.text.toString()
-        val images = listOf(imageUrl, *((currentPet?.imageUrls ?: listOf()).toTypedArray()))
-        val filteredImages = images.filter { it.isNotBlank() }
-        val imageUrls = filteredImages.ifEmpty { null }
+
+        val sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER
+        val status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
 
         val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: ""
+
         return PetDto(
-            petId = currentPet?.petId ?: "",
+            petId = currentPet?.petId ?: petId,
             name = name,
             description = description,
             birthDate = birthDate,
-            imageUrls = imageUrls,
+            imageUrls = currentPet?.imageUrls ?: listOf(),
             breedId = breedId,
-            sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER,
-            status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
+            sex = sex,
+            status = status
         )
+    }
+
+    // Set image urls adapter
+    private fun setImageUrlsAdapter(imageUrls: List<String>) {
+        imageUrlsAdapter = ArrayAdapter(requireContext(), R.layout.item_list, imageUrls)
+        petImageUrls?.setAdapter(imageUrlsAdapter)
+        petImageUrls?.setText(imageUrls.lastOrNull() ?: "", false)
     }
 
     // Initialize views
@@ -395,15 +437,18 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         btnCancel = view.findViewById(R.id.Pets_Button_BackToList)
         btnAdd = view.findViewById(R.id.Pets_Button_Add)
         btnMakeImg = view.findViewById(R.id.Pets_Button_MakeImage)
+        btnDeleteImg = view.findViewById(R.id.Pets_Button_DeleteImage)
         btnDatePicker = view.findViewById(R.id.Pets_Button_DatePicker)
 
         petName = view.findViewById(R.id.Pets_EditText_Name)
         petDescription = view.findViewById(R.id.Pets_EditText_Description)
         petBirthDate = view.findViewById(R.id.Pets_EditText_BirthDate)
-        petImageUrl = view.findViewById(R.id.Pets_EditText_ImageUrl)
+        petImageUrls = view.findViewById(R.id.Pets_AutoCompleteTextView_ImageUrl)
         petBreed = view.findViewById(R.id.Pets_AutoCompleteTextView_BreedId)
         petSex = view.findViewById(R.id.Pets_AutoCompleteTextView_Sex)
         petStatus = view.findViewById(R.id.Pets_AutoCompleteTextView_Status)
+
+        selectedImage = view.findViewById(R.id.Pets_ImageView_Image)
 
         sexAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Sex.entries.map { it.description })
         petSex?.setAdapter(sexAdapter)

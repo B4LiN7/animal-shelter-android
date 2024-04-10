@@ -86,25 +86,47 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <LinearLayout
+    <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_weight="1"
+        android:hint="Képek"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_margin="2dp" >
+
+        <AutoCompleteTextView
+            android:id="@+id/Pets_AutoCompleteTextView_ImageUrl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" >
+            android:inputType="none" />
 
-            <EditText
-                android:id="@+id/Pets_EditText_ImageUrl"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="Kép URL" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/Pets_Button_MakeImage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Kép készitése" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
 
-        </LinearLayout>
+        <Button
+            android:id="@+id/Pets_Button_DeleteImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Törlés" />
+
+        <Button
+            android:id="@+id/Pets_Button_MakeImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kép" />
+
+    </LinearLayout>
+
+</LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -140,6 +162,14 @@
                 android:text="Vissza" />
 
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/Pets_ImageView_Image"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/paw"
+            android:layout_gravity="center"
+            />
 
     </LinearLayout>
 

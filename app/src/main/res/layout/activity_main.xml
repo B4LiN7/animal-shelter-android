@@ -17,7 +17,7 @@
             android:elevation="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/lighterGray" />
+            android:background="@color/gray" />
 
         <FrameLayout
             android:id="@+id/Main_FrameLayout"

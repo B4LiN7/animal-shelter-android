@@ -105,7 +105,7 @@ class AdoptionsFragment : Fragment() {
 
 
             holder.btnFinish.setOnClickListener {
-                dialog?.setTitle("Adoptálás")?.setMessage("Biztosan véglegesiti a kiválasztott, ${pet?.name} nevű állat adoptálását?")
+                dialog?.setTitle(R.string.adoptions)?.setMessage(getString(R.string.adoptions_alert_finalize_adoption, pet?.name))
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
                             val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED, null))
@@ -122,7 +122,7 @@ class AdoptionsFragment : Fragment() {
             }
 
             holder.btnCancel.setOnClickListener {
-                dialog?.setTitle("Megszakitás")?.setMessage("Biztosan törölni megszakítja a kiválasztott, ${pet?.name} állat adoptációját?")
+                dialog?.setTitle(R.string.alert_cancel)?.setMessage(getString(R.string.adoptions_alert_reject_adoption, pet?.name))
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
                             val response = apiSrv.adoptionInterface.updateAdoption(adoption.adoptionId, AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.REJECTED, null))
