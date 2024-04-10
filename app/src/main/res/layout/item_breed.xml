@@ -35,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/BreedItem_TextView_Name" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/BreedItem_Button_Delete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
         app:layout_constraintEnd_toStartOf="@id/BreedItem_Button_Edit"
         app:layout_constraintTop_toBottomOf="@id/BreedItem_TextView_Description" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/BreedItem_Button_Edit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

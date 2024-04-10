@@ -61,7 +61,7 @@
                 android:layout_weight="1"
                 android:hint="Születési dátum" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/Pets_Button_DatePicker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -112,13 +112,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/Pets_Button_DeleteImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Törlés" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/Pets_Button_MakeImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -149,13 +149,13 @@
             android:orientation="horizontal"
             android:layout_gravity="center" >
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/Pets_Button_Submit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Állat felvétele/szerkesztése" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/Pets_Button_BackToList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -173,7 +173,7 @@
 
     </LinearLayout>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/Pets_Button_Add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

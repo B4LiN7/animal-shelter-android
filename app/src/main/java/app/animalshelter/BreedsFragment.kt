@@ -35,10 +35,10 @@ class BreedsFragment : Fragment() {
     private var dialog: AlertDialog.Builder? = null
 
     // Buttons
-    private var btnSubmit: Button? = null
-    private var btnCancel: Button? = null
-    private var btnAddBreed: Button? = null
-    private var btnAddSpecies: Button? = null
+    private var btnSubmit: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnCancel: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnAddBreed: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnAddSpecies: androidx.appcompat.widget.AppCompatButton? = null
 
     // Form inputs
     private var psName: EditText? = null

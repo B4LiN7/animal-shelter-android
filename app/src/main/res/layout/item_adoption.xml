@@ -46,7 +46,7 @@
         app:layout_constraintStart_toStartOf="@id/AdoptionItem_TextView_User"
         app:layout_constraintTop_toBottomOf="@id/AdoptionItem_TextView_User" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/AdoptionItem_Button_Finish"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
         app:layout_constraintEnd_toStartOf="@id/AdoptionItem_Button_Cancel"
         app:layout_constraintTop_toBottomOf="@id/AdoptionItem_TextView_Status" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/AdoptionItem_Button_Cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -22,8 +22,8 @@ class LoginFragment : Fragment() {
     private var password: EditText? = null
     private var confirmPassword: EditText? = null
     private var email: EditText? = null
-    private var btnLogin: Button? = null
-    private var btnRegister: Button? = null
+    private var btnLogin: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnRegister: androidx.appcompat.widget.AppCompatButton? = null
     private enum class AccountEvent { LOGIN, REGISTER }
     private var currentEvent: AccountEvent = AccountEvent.LOGIN
 

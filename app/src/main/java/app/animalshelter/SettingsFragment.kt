@@ -14,7 +14,7 @@ import android.widget.EditText
 class SettingsFragment : Fragment() {
 
     var baseUrl: EditText? = null
-    var btnSubmit: Button? = null
+    var btnSubmit: androidx.appcompat.widget.AppCompatButton? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)

@@ -58,12 +58,12 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     private var dialog: AlertDialog.Builder? = null
 
     // Buttons (initially null, will be initialized in initViews)
-    private var btnSubmit: Button? = null
-    private var btnCancel: Button? = null
-    private var btnAdd: Button? = null
-    private var btnMakeImg: Button? = null
-    private var btnDeleteImg: Button? = null
-    private var btnDatePicker: Button? = null
+    private var btnSubmit: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnCancel: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnAdd: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnMakeImg: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnDeleteImg: androidx.appcompat.widget.AppCompatButton? = null
+    private var btnDatePicker: androidx.appcompat.widget.AppCompatButton? = null
 
     // Form fields (initially null, will be initialized in initViews)
     private var petName: EditText? = null
@@ -156,10 +156,12 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                         }
                     }
                     override fun onError(exception: ImageCaptureException) {
+                        Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
                         Log.e("PetsFragment", "Image capture failed", exception)
                     }
                 })
             } catch (e: Exception) {
+                Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
                 Log.e("PetsFragment", "Error opening camera", e)
             }
         }

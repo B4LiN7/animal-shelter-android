@@ -54,13 +54,13 @@
             android:orientation="horizontal"
             android:layout_gravity="center" >
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/Breeds_Button_Submit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Breed/Species felvétele/szerkesztése" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/Breeds_Button_BackToList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -77,13 +77,13 @@
         android:orientation="horizontal"
         android:layout_gravity="center" >
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/Breeds_Button_AddBreed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Breed felvétele" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/Breeds_Button_AddSpecies"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
