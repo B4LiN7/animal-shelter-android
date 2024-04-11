@@ -110,11 +110,11 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle(R.string.adoptions)?.setMessage(getString(R.string.adoptions_alert_finalize_adoption, pet?.name))
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.updateAdoption(/*adoption.adoptionId, */AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED, null))
-                            if (response.isSuccessful) {
-                                Toast.makeText(context, "Adoption finished", Toast.LENGTH_SHORT).show()
+                            val updatedAdoption = apiSrv.updateAdoption(AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.APPROVED, null))
+                            if (updatedAdoption == null) {
+                                Toast.makeText(context, R.string.adoption_update_failed_sentence, Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(context, "Error finishing adoption", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.adoption_update_success_sentence, Toast.LENGTH_SHORT).show()
                             }
                             fetchAndDisplayAdoptions()
                         }
@@ -127,11 +127,11 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle(R.string.alert_cancel)?.setMessage(getString(R.string.adoptions_alert_reject_adoption, pet?.name))
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.updateAdoption(/*adoption.adoptionId, */AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.REJECTED, null))
-                            if (response.isSuccessful) {
-                                Toast.makeText(context, "Adoption cancelled", Toast.LENGTH_SHORT).show()
+                            val updatedAdoption = apiSrv.updateAdoption(AdoptionDto(adoption.petId, adoption.userId, AdoptionStatus.REJECTED, null))
+                            if (updatedAdoption == null) {
+                                Toast.makeText(context, R.string.adoption_finalize_failed_sentence, Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(context, "Error cancelling adoption", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.adoption_finalize_success_sentence, Toast.LENGTH_SHORT).show()
                             }
                             fetchAndDisplayAdoptions()
                         }
@@ -144,11 +144,11 @@ class AdoptionsFragment : Fragment() {
                 dialog?.setTitle(R.string.alert_delete)?.setMessage(getString(R.string.adoptions_alert_delete_adoption, pet?.name))
                     ?.setPositiveButton(R.string.btn_yes) { _, _ ->
                         lifecycleScope.launch {
-                            val response = apiSrv.adoptionInterface.deleteAdoption(adoption.adoptionId)
-                            if (response.isSuccessful) {
-                                Toast.makeText(context, "Adoption deleted", Toast.LENGTH_SHORT).show()
+                            val deletedAdoption = apiSrv.deleteAdoption(adoption.adoptionId)
+                            if (deletedAdoption == null) {
+                                Toast.makeText(context, R.string.adoption_delete_failed_sentence, Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(context, "Error deleting adoption", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.adoption_delete_success_sentence, Toast.LENGTH_SHORT).show()
                             }
                             fetchAndDisplayAdoptions()
                         }

@@ -14,7 +14,7 @@ interface Adoption {
     suspend fun getAdoptions(): List<AdoptionResponse>
 
     @PUT("/adoption")
-    suspend fun updateAdoption(/*@Path("adoptionId") id: String, */@Body data: AdoptionDto): Response<ResponseBody>
+    suspend fun updateAdoption(@Body data: AdoptionDto): Response<ResponseBody>
 
     @DELETE("/adoption/{adoptionId}")
     suspend fun deleteAdoption(@Path("adoptionId") id: String): Response<ResponseBody>

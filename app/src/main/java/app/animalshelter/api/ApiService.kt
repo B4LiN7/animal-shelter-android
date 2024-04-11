@@ -10,6 +10,8 @@ import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
 import java.io.File
 
 class ApiService(context: Context) {
@@ -25,7 +27,7 @@ class ApiService(context: Context) {
     private val breedInterface: Breed = retrofitService.getRetrofitService().create(Breed::class.java)
     private val speciesInterface: Species = retrofitService.getRetrofitService().create(Species::class.java)
     private val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
-    val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
+    private val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
     private val tokenRefresh: TokenRefresh = TokenRefresh(authInterface, sharedPreferences)
 
@@ -147,6 +149,26 @@ class ApiService(context: Context) {
         }
         return adoptionList
     }
+    suspend fun updateAdoption(dto: AdoptionDto): Response<ResponseBody>? {
+        tokenRefresh.refreshTokenIfNeeded()
+        return try {
+            adoptionInterface.updateAdoption(dto)
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error updating adoption", e)
+            null
+        }
+    }
+    suspend fun deleteAdoption(adoptionId: String): Response<ResponseBody>? {
+        tokenRefresh.refreshTokenIfNeeded()
+        return try {
+            adoptionInterface.deleteAdoption(adoptionId)
+        } catch (e: Exception) {
+            Log.e("ApiService", "Error deleting adoption", e)
+            null
+        }
+    }
+
+
     suspend fun fetchUsernames(adoptions: List<AdoptionResponse>): MutableMap<String, UserNameDto> {
         tokenRefresh.refreshTokenIfNeeded()
         val usernameMap: MutableMap<String, UserNameDto> = mutableMapOf()
