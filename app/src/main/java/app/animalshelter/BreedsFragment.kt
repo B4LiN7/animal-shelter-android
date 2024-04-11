@@ -98,8 +98,8 @@ class BreedsFragment : Fragment() {
                         BreedsFragmentEvent.ADD_BREED -> {
                             val breed = breedOrSpecies as BreedDto
                             val newBreed = apiSrv.createBreed(breed)
-                            if (newBreed != null) {
-                                Log.i("BreedsFragment", "Created breed: ${newBreed.breedId}")
+                            if (newBreed == null) {
+                                Log.i("BreedsFragment", "Failed to created breed")
                                 return@launch
                             }
                             Log.i("BreedsFragment", "Created breed: ${newBreed?.breedId}")
@@ -109,25 +109,33 @@ class BreedsFragment : Fragment() {
                         BreedsFragmentEvent.EDIT_BREED -> {
                             val breed = breedOrSpecies as BreedDto
                             val updatedBreed = apiSrv.updateBreed(breed.breedId, breed)
-                            Log.i("BreedsFragment", "Updated breed: ${updatedBreed?.breedId}")
+                            if (updatedBreed == null) {
+                                Log.i("BreedsFragment", "Failed to updated breed")
+                                return@launch
+                            }
+                            Log.i("BreedsFragment", "Updated breed: ${updatedBreed.breedId}")
                             currentEvent = BreedsFragmentEvent.LIST_BREEDS
                             setEvent(currentEvent)
                         }
                         BreedsFragmentEvent.ADD_SPECIES -> {
                             val species = breedOrSpecies as SpeciesDto
                             val newSpecies = apiSrv.createSpecies(species)
-                            if (newSpecies != null) {
-                                Log.i("BreedsFragment", "Created breed: ${newSpecies.speciesId}")
+                            if (newSpecies == null) {
+                                Log.i("BreedsFragment", "Failed to created breed")
                                 return@launch
                             }
-                            Log.i("BreedsFragment", "Created breed: ${newSpecies?.speciesId}")
+                            Log.i("BreedsFragment", "Created breed: ${newSpecies.speciesId}")
                             currentEvent = BreedsFragmentEvent.LIST_BREEDS
                             setEvent(currentEvent)
                         }
                         BreedsFragmentEvent.EDIT_SPECIES -> {
                             val species = breedOrSpecies as SpeciesDto
                             val updatedSpecies = apiSrv.updateSpecies(species.speciesId, species)
-                            Log.i("BreedsFragment", "Updated species: ${updatedSpecies?.speciesId}")
+                            if (updatedSpecies == null) {
+                                Log.i("BreedsFragment", "Failed to updated species")
+                                return@launch
+                            }
+                            Log.i("BreedsFragment", "Updated species: ${updatedSpecies.speciesId}")
                             currentEvent = BreedsFragmentEvent.LIST_BREEDS
                             setEvent(currentEvent)
                         }

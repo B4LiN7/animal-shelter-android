@@ -31,30 +31,6 @@ class MainActivity : AppCompatActivity() {
         apiSrv = ApiService(this)
         setContentView(R.layout.activity_main)
         initViews()
-        initHeader()
-
-        lifecycleScope.launch {
-            val reachable = apiSrv.apiTest()
-            if (!reachable) {
-                Toast.makeText(this@MainActivity, "Nem sikerült kapcsolódni a szerverhez!", Toast.LENGTH_LONG).show()
-
-                var logoutItem = navigationView?.menu?.findItem(R.id.nav_logout)
-                logoutItem?.isVisible = false
-                var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
-                loginItem?.isVisible = false
-                var adoptionsItem = navigationView?.menu?.findItem(R.id.nav_adoptions)
-                adoptionsItem?.isVisible = false
-                var petsItem = navigationView?.menu?.findItem(R.id.nav_pets)
-                petsItem?.isVisible = false
-                var breedsItem = navigationView?.menu?.findItem(R.id.nav_breeds)
-                breedsItem?.isVisible = false
-
-                val fragment = SettingsFragment()
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.Main_FrameLayout, fragment)
-                    .commit()
-            }
-        }
 
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar, R.string.nav_open, R.string.nav_close
@@ -109,6 +85,31 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             true
+        }
+
+        lifecycleScope.launch {
+            val reachable = apiSrv.apiTest()
+            if (!reachable) {
+                Toast.makeText(this@MainActivity, "Nem sikerült kapcsolódni a szerverhez!", Toast.LENGTH_LONG).show()
+
+                var logoutItem = navigationView?.menu?.findItem(R.id.nav_logout)
+                logoutItem?.isVisible = false
+                var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
+                loginItem?.isVisible = false
+                var adoptionsItem = navigationView?.menu?.findItem(R.id.nav_adoptions)
+                adoptionsItem?.isVisible = false
+                var petsItem = navigationView?.menu?.findItem(R.id.nav_pets)
+                petsItem?.isVisible = false
+                var breedsItem = navigationView?.menu?.findItem(R.id.nav_breeds)
+                breedsItem?.isVisible = false
+
+                val fragment = SettingsFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.Main_FrameLayout, fragment)
+                    .commit()
+            } else {
+                initHeader()
+            }
         }
 
     }

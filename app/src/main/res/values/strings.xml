@@ -6,7 +6,12 @@
     <string name="btn_no">Nem</string>
     <string name="btn_back">Vissza</string>
     <string name="alert_cancel">Megszakitás</string>
+    <string name="alert_delete">Törlés</string>
     <string name="adoptions">Adoptálás</string>
     <string name="adoptions_alert_finalize_adoption">Biztosan véglegesiti a kiválasztott, %s nevű állat adoptálását?</string>
     <string name="adoptions_alert_reject_adoption">Biztosan elutasítja a kiválasztott, %s nevű állat adoptálását?</string>
+    <string name="adoptions_alert_delete_adoption">Biztosan törli a kiválasztott, %s nevű állat adoptációját?</string>
+    <string name="adoption_finish">Befejezés</string>
+    <string name="adoption_cancel">Visszavonás</string>
+    <string name="adoption_delete">Törlés</string>
 </resources>

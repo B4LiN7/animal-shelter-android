@@ -3,6 +3,7 @@ package app.animalshelter.api
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -12,8 +13,11 @@ interface Adoption {
     @GET("/adoption")
     suspend fun getAdoptions(): List<AdoptionResponse>
 
-    @PUT("/adoption/{adoptionId}")
-    suspend fun updateAdoption(@Path("adoptionId") id: String, @Body data: AdoptionDto): Response<ResponseBody>
+    @PUT("/adoption")
+    suspend fun updateAdoption(/*@Path("adoptionId") id: String, */@Body data: AdoptionDto): Response<ResponseBody>
+
+    @DELETE("/adoption/{adoptionId}")
+    suspend fun deleteAdoption(@Path("adoptionId") id: String): Response<ResponseBody>
 }
 
 data class AdoptionResponse(
