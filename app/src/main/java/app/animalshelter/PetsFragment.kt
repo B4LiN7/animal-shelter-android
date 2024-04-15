@@ -1,13 +1,17 @@
 package app.animalshelter
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.icu.util.Calendar
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -23,6 +27,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -40,6 +45,7 @@ import app.animalshelter.api.Sex
 import app.animalshelter.api.Status
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.Period
 import java.time.ZonedDateTime
@@ -103,6 +109,42 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         petBirthDate?.setText(formattedDate)
     }
 
+    private fun dispatchTakePictureIntent() {
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        resultLauncher.launch(takePictureIntent)
+    }
+
+    private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // There are no request codes
+            val data: Intent? = result.data
+            val bundle: Bundle = Bundle(data?.extras)
+            val imageBitmap = data?.extras?.get("data") as Bitmap
+            val imageFile = File(context?.cacheDir, "${currentPet?.name}.jpg")
+            val fileOutputStream = FileOutputStream(imageFile)
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
+            fileOutputStream.flush()
+            fileOutputStream.close()
+            val imageUri = Uri.fromFile(imageFile)
+            lifecycleScope.launch {
+                val imageUrl = apiSrv.uploadImage(imageUri)
+
+                if (imageUrl == null) {
+                    Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val updatedImageUrls = currentPet?.imageUrls?.toMutableList()
+                updatedImageUrls?.add(imageUrl)
+                currentPet?.imageUrls = updatedImageUrls
+                setImageUrlsAdapter(currentPet?.imageUrls ?: listOf())
+            }
+            Toast.makeText(context, "Kép készítve: $bundle", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
         apiSrv = ApiService(requireContext())
@@ -137,7 +179,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
         // Make picture with camera and upload it
         btnMakeImg?.setOnClickListener {
-            try {
+            dispatchTakePictureIntent()
+            /*try {
                 val photoFile = File.createTempFile("${currentPet?.name}", ".jpg", requireContext().cacheDir)
                 val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
                 imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(requireContext()), object : ImageCapture.OnImageSavedCallback {
@@ -163,7 +206,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             } catch (e: Exception) {
                 Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
                 Log.e("PetsFragment", "Error opening camera", e)
-            }
+            }*/
         }
 
         // Delete selected image url from list
@@ -468,6 +511,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breedList)
         petBreed?.setAdapter(breedAdapter)
     }
+
+
 }
 
 // Date picker dialog
