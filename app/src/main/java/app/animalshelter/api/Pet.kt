@@ -41,6 +41,16 @@ data class PetDto(
     }
 }
 
+data class PetErrorResponse(
+    val message: List<String>,
+    val error: String,
+    val statusCode: Int,
+) {
+    override fun toString(): String {
+        return "Error: $error\nStatus code: $statusCode\nMessage: ${message.joinToString("\n")}"
+    }
+}
+
 enum class Sex(val description: String) {
     OTHER("Egyéb"),
     MALE("Him"),

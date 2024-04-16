@@ -204,7 +204,7 @@ class ApiService(context: Context) {
         }
         return petList
     }
-    suspend fun createPet(pet: PetDto): PetDto? {
+    suspend fun createPet(pet: PetDto): Any? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
             val response = petInterface.createPet(pet)
@@ -214,15 +214,17 @@ class ApiService(context: Context) {
                 Log.i("ApiService", "Pet added: $petResponse")
                 petResponse
             } else {
-                Log.e("ApiService", "Error adding pet: ${response.errorBody()?.string()}")
-                null
+                val responseBody = response.body()?.string()
+                val petResponse: PetErrorResponse? = Gson().fromJson(responseBody, PetErrorResponse::class.java)
+                Log.e("ApiService", "Error adding pet: ${petResponse.toString()}")
+                petResponse
             }
         } catch (e: Exception) {
             Log.e("ApiService", "Error adding pet", e)
             null
         }
     }
-    suspend fun updatePet(petId: String, pet: PetDto): PetDto? {
+    suspend fun updatePet(petId: String, pet: PetDto): Any? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
             val response = petInterface.updatePet(petId, pet)
@@ -232,8 +234,10 @@ class ApiService(context: Context) {
                 Log.i("ApiService", "Pet updated: $petResponse")
                 petResponse
             } else {
+                val responseBody = response.body()?.string()
+                val petResponse: PetErrorResponse? = Gson().fromJson(responseBody, PetErrorResponse::class.java)
                 Log.e("ApiService", "Error updating pet: ${response.errorBody()?.string()}")
-                null
+                petResponse
             }
         } catch (e: Exception) {
             Log.e("ApiService", "Error updating pet", e)

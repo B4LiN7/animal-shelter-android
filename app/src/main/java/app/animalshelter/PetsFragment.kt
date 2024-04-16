@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.RecyclerView
 import app.animalshelter.api.ApiService
 import app.animalshelter.api.BreedDto
 import app.animalshelter.api.PetDto
+import app.animalshelter.api.PetErrorResponse
 import app.animalshelter.api.Sex
 import app.animalshelter.api.Status
 import kotlinx.coroutines.launch
@@ -144,6 +145,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         currentEvent = PetFragmentEvent.LIST_PETS
         setEvent(currentEvent)
 
+        currentPet = PetDto("","", Sex.OTHER, "", "", "", listOf(), Status.UNKNOWN)
+
         // Cancel and add buttons (using setEvent)
         btnCancel?.setOnClickListener {
             currentEvent = PetFragmentEvent.LIST_PETS
@@ -198,10 +201,10 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                 PetFragmentEvent.ADD_PET -> {
                     lifecycleScope.launch {
                         val newPet = apiSrv.createPet(getFormValues())
-                        if (newPet != null) {
+                        if (newPet is PetDto) {
                             Toast.makeText(context, "Állat hozzáadva", Toast.LENGTH_SHORT).show()
                             setEvent(PetFragmentEvent.LIST_PETS)
-                        } else {
+                        } else if (newPet is PetErrorResponse) {
                             Log.e("PetsFragment", "Error adding pet")
                             Toast.makeText(context, "Nem sikerült hozzáadni az állatot: $newPet.", Toast.LENGTH_SHORT).show()
                         }
@@ -211,13 +214,13 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                     lifecycleScope.launch {
                         val dto = getFormValues()
                         val updatedPet = apiSrv.updatePet(dto.petId, dto)
-                        if (updatedPet != null) {
+                        if (updatedPet is PetDto) {
                             Log.i("PetsFragment", "Pet updated: [${updatedPet.petId}] ${updatedPet.name}")
                             Toast.makeText(context, "Állat szerkesztve", Toast.LENGTH_SHORT).show()
                             setEvent(PetFragmentEvent.LIST_PETS)
-                        } else {
+                        } else if (updatedPet is PetErrorResponse) {
                             Log.e("PetsFragment", "Error updating pet")
-                            Toast.makeText(context, "Nem sikerült szerkeszteni az állatot", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Nem sikerült szerkeszteni az állatot: $updatedPet", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -346,6 +349,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                 recyclerView?.visibility = View.GONE
 
                 resetFormValues()
+                currentPet?.imageUrls = listOf()
+                setImageUrlsAdapter(currentPet?.imageUrls ?: listOf())
 
                 btnAdd?.visibility = View.GONE
                 btnSubmit?.text = "Felvétel"
