@@ -13,8 +13,8 @@ interface Adoption {
     @GET("/adoption")
     suspend fun getAdoptions(): List<AdoptionResponse>
 
-    @PUT("/adoption")
-    suspend fun updateAdoption(@Body data: AdoptionDto): Response<ResponseBody>
+    @PUT("/adoption/{adoptionId}")
+    suspend fun updateAdoption(@Path("adoptionId") id: String, @Body data: AdoptionDto): Response<ResponseBody>
 
     @DELETE("/adoption/{adoptionId}")
     suspend fun deleteAdoption(@Path("adoptionId") id: String): Response<ResponseBody>
@@ -29,8 +29,6 @@ data class AdoptionResponse(
 ) {}
 
 data class AdoptionDto(
-    val petId: String,
-    val userId: String,
     val status: AdoptionStatus,
     val reason: String?,
 ) {}
@@ -40,4 +38,5 @@ enum class AdoptionStatus {
     REJECTED,
     CANCELLED,
     APPROVED,
+    RETURNED,
 }

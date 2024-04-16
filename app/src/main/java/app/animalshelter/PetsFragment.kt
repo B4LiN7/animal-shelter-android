@@ -4,8 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
-import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.icu.util.Calendar
@@ -30,7 +28,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
@@ -93,10 +90,6 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     private lateinit var currentEvent: PetFragmentEvent
     private var currentPet: PetDto? = null
 
-    // Camera
-    private lateinit var imageCapture: ImageCapture
-    private lateinit var cameraExecutor: ExecutorService
-
     // API service
     private lateinit var apiSrv: ApiService
 
@@ -139,7 +132,6 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                 currentPet?.imageUrls = updatedImageUrls
                 setImageUrlsAdapter(currentPet?.imageUrls ?: listOf())
             }
-            Toast.makeText(context, "Kép készítve: $bundle", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -162,51 +154,9 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             setEvent(currentEvent)
         }
 
-        // Thing for camera (I don't know what it does but work)
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            try {
-                cameraProvider.unbindAll()
-                imageCapture = ImageCapture.Builder().build()
-                cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
-            } catch (exc: Exception) {
-                Log.e("PetsFragment", "Use case binding failed", exc)
-            }
-
-        }, ContextCompat.getMainExecutor(requireContext()))
-
         // Make picture with camera and upload it
         btnMakeImg?.setOnClickListener {
             dispatchTakePictureIntent()
-            /*try {
-                val photoFile = File.createTempFile("${currentPet?.name}", ".jpg", requireContext().cacheDir)
-                val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-                imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(requireContext()), object : ImageCapture.OnImageSavedCallback {
-                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        val savedUri = Uri.fromFile(photoFile)
-                        lifecycleScope.launch {
-                            val path = apiSrv.uploadImage(savedUri)
-                            if (path == null) {
-                                Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
-                                return@launch
-                            }
-                            val updatedImageUrls = currentPet?.imageUrls?.toMutableList()
-                            updatedImageUrls?.add(path)
-                            currentPet?.imageUrls = updatedImageUrls
-                            setImageUrlsAdapter(currentPet?.imageUrls ?: listOf())
-                        }
-                    }
-                    override fun onError(exception: ImageCaptureException) {
-                        Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
-                        Log.e("PetsFragment", "Image capture failed", exception)
-                    }
-                })
-            } catch (e: Exception) {
-                Toast.makeText(context, "Nem sikerült feltölteni a képet", Toast.LENGTH_SHORT).show()
-                Log.e("PetsFragment", "Error opening camera", e)
-            }*/
         }
 
         // Delete selected image url from list
@@ -476,8 +426,6 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
         dialog = AlertDialog.Builder(context)
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
         btnSubmit = view.findViewById(R.id.Pets_Button_Submit)
         btnCancel = view.findViewById(R.id.Pets_Button_BackToList)
         btnAdd = view.findViewById(R.id.Pets_Button_Add)
@@ -498,7 +446,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         sexAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Sex.entries.map { it.description })
         petSex?.setAdapter(sexAdapter)
 
-        statusAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Status.entries.map { it.description })
+        statusAdapter = ArrayAdapter(requireContext(), R.layout.item_list, Status.entries.filter { it != Status.ADOPTING && it != Status.ADOPTED }.map { it.description })
         petStatus?.setAdapter(statusAdapter)
 
         lifecycleScope.launch {
@@ -511,35 +459,4 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         breedAdapter = ArrayAdapter(requireContext(), R.layout.item_list, breedList)
         petBreed?.setAdapter(breedAdapter)
     }
-
-
 }
-
-// Date picker dialog
-class DatePickerFragment : DialogFragment(), DatePickerDialog.OnDateSetListener {
-    interface DatePickerCallback {
-        fun onDateSelected(year: Int, month: Int, day: Int)
-    }
-
-    var callback: DatePickerCallback? = null
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        // Use the current date as the default date in the picker.
-        val c = Calendar.getInstance()
-        val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
-        val day = c.get(Calendar.DAY_OF_MONTH)
-
-        // Create a new instance of DatePickerDialog and return it.
-        return DatePickerDialog(requireContext(), this, year, month, day)
-
-    }
-
-    override fun onDateSet(view: DatePicker, year: Int, month: Int, day: Int) {
-        callback?.onDateSelected(year, month, day)
-    }
-}
-
-
-
-

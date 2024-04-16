@@ -53,5 +53,6 @@ enum class Status(val description: String) {
     INSHELTER("Menhelyen van"),
     ILL("Beteg"),
     ADOPTED("Örökbe fogadva"),
+    ADOPTING("Örökbe fogadás allatt"),
     DECEASED("Elhunyt");
 }

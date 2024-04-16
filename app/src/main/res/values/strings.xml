@@ -20,4 +20,8 @@
     <string name="adoption_finish">Befejezés</string>
     <string name="adoption_cancel">Visszavonás</string>
     <string name="adoption_delete">Törlés</string>
+    <string name="adoption_return">Visszatérités</string>
+    <string name="adoptions_alert_return_adoption">Biztosan visszatériti a(z) %s nevű állatot?</string>
+    <string name="adoption_return_failed_sentence">Állat visszatérités sikertelen</string>
+    <string name="adoption_return_success_sentence">Állat visszatérités sikeres</string>
 </resources>

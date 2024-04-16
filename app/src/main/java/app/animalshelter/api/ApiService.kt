@@ -149,10 +149,10 @@ class ApiService(context: Context) {
         }
         return adoptionList
     }
-    suspend fun updateAdoption(dto: AdoptionDto): Response<ResponseBody>? {
+    suspend fun updateAdoption(adoptionId: String, dto: AdoptionDto): Response<ResponseBody>? {
         tokenRefresh.refreshTokenIfNeeded()
         return try {
-            adoptionInterface.updateAdoption(dto)
+            adoptionInterface.updateAdoption(adoptionId, dto)
         } catch (e: Exception) {
             Log.e("ApiService", "Error updating adoption", e)
             null
