@@ -2,6 +2,7 @@ package app.animalshelter.api
 
 import android.content.SharedPreferences
 import android.util.Log
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -29,10 +30,14 @@ class RetrofitService(private val sharedPreferences: SharedPreferences) {
             .addInterceptor(TokenInterceptor(sharedPreferences))
             .build()
 
+        val gson = GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+            .create()
+
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 }

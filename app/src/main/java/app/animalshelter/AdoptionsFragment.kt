@@ -100,6 +100,39 @@ class AdoptionsFragment : Fragment() {
             holder.user.text = username ?: "Unknown"
             holder.status.text = "${adoption.status.toString()} ${adoption.reason ?: ""}"
 
+            when (adoption.status) {
+                AdoptionStatus.PENDING -> {
+                    holder.btnCancel.visibility = View.VISIBLE
+                    holder.btnFinish.visibility = View.VISIBLE
+                    holder.btnDelete.visibility = View.GONE
+                    holder.btnReturn.visibility = View.GONE
+                }
+                AdoptionStatus.APPROVED -> {
+                    holder.btnCancel.visibility = View.GONE
+                    holder.btnFinish.visibility = View.GONE
+                    holder.btnDelete.visibility = View.VISIBLE
+                    holder.btnReturn.visibility = View.VISIBLE
+                }
+                AdoptionStatus.REJECTED -> {
+                    holder.btnCancel.visibility = View.GONE
+                    holder.btnFinish.visibility = View.GONE
+                    holder.btnDelete.visibility = View.VISIBLE
+                    holder.btnReturn.visibility = View.GONE
+                }
+                AdoptionStatus.RETURNED -> {
+                    holder.btnCancel.visibility = View.GONE
+                    holder.btnFinish.visibility = View.GONE
+                    holder.btnDelete.visibility = View.VISIBLE
+                    holder.btnReturn.visibility = View.GONE
+                }
+                else -> {
+                    holder.btnCancel.visibility = View.GONE
+                    holder.btnFinish.visibility = View.GONE
+                    holder.btnDelete.visibility = View.GONE
+                    holder.btnReturn.visibility = View.GONE
+                }
+            }
+
             if (adoption.status != AdoptionStatus.PENDING) {
                 holder.btnFinish.visibility = View.GONE
                 holder.btnCancel.visibility = View.GONE

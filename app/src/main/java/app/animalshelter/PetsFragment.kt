@@ -78,6 +78,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     private var petSex: AutoCompleteTextView? = null
     private var petStatus: AutoCompleteTextView? = null
 
+    // Image view to display selected image
     private var selectedImage: ImageView? = null
 
     // Form field adapters
@@ -89,30 +90,16 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
     // Current event and pet for editing
     private enum class PetFragmentEvent { LIST_PETS, ADD_PET, EDIT_PET }
     private lateinit var currentEvent: PetFragmentEvent
-    private var currentPet: PetDto? = null
+    private var currentPet: PetDto? = PetDto("","", Sex.OTHER, "", "", "", listOf(), Status.UNKNOWN)
 
     // API service
     private lateinit var apiSrv: ApiService
 
-    // Override for DatePickerCallback
-    override fun onDateSelected(year: Int, month: Int, day: Int) {
-        val zonedDateTime = ZonedDateTime.of(year, month + 1, day, 0, 0, 0, 0, ZonedDateTime.now().zone)
-        val localDate = zonedDateTime.toLocalDate()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val formattedDate = localDate.format(formatter)
-        petBirthDate?.setText(formattedDate)
-    }
-
-    private fun dispatchTakePictureIntent() {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        resultLauncher.launch(takePictureIntent)
-    }
-
+    // Camera
     private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             // There are no request codes
             val data: Intent? = result.data
-            val bundle: Bundle = Bundle(data?.extras)
             val imageBitmap = data?.extras?.get("data") as Bitmap
             val imageFile = File(context?.cacheDir, "${currentPet?.name}.jpg")
             val fileOutputStream = FileOutputStream(imageFile)
@@ -136,7 +123,18 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         }
     }
 
-
+    // Override for DatePickerCallback to set birth date
+    override fun onDateSelected(year: Int, month: Int, day: Int) {
+        val zonedDateTime = ZonedDateTime.of(year, month + 1, day, 0, 0, 0, 0, ZonedDateTime.now().zone)
+        val localDate = zonedDateTime.toLocalDate()
+        if (localDate.isAfter(LocalDate.now())) {
+            Toast.makeText(context, "A születési dátum nem lehet a jövőben", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val formattedDate = localDate.format(formatter)
+        petBirthDate?.setText(formattedDate)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_pets, container, false)
@@ -144,8 +142,6 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         initViews(view)
         currentEvent = PetFragmentEvent.LIST_PETS
         setEvent(currentEvent)
-
-        currentPet = PetDto("","", Sex.OTHER, "", "", "", listOf(), Status.UNKNOWN)
 
         // Cancel and add buttons (using setEvent)
         btnCancel?.setOnClickListener {
@@ -159,7 +155,8 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
         // Make picture with camera and upload it
         btnMakeImg?.setOnClickListener {
-            dispatchTakePictureIntent()
+            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            resultLauncher.launch(takePictureIntent)
         }
 
         // Delete selected image url from list
@@ -201,12 +198,12 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                 PetFragmentEvent.ADD_PET -> {
                     lifecycleScope.launch {
                         val newPet = apiSrv.createPet(getFormValues())
-                        if (newPet is PetDto) {
+                        if (newPet != null) {
                             Toast.makeText(context, "Állat hozzáadva", Toast.LENGTH_SHORT).show()
                             setEvent(PetFragmentEvent.LIST_PETS)
-                        } else if (newPet is PetErrorResponse) {
+                        } else {
                             Log.e("PetsFragment", "Error adding pet")
-                            Toast.makeText(context, "Nem sikerült hozzáadni az állatot: $newPet.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Nem sikerült hozzáadni az állatot.", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -214,13 +211,13 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
                     lifecycleScope.launch {
                         val dto = getFormValues()
                         val updatedPet = apiSrv.updatePet(dto.petId, dto)
-                        if (updatedPet is PetDto) {
+                        if (updatedPet != null) {
                             Log.i("PetsFragment", "Pet updated: [${updatedPet.petId}] ${updatedPet.name}")
                             Toast.makeText(context, "Állat szerkesztve", Toast.LENGTH_SHORT).show()
                             setEvent(PetFragmentEvent.LIST_PETS)
-                        } else if (updatedPet is PetErrorResponse) {
+                        } else {
                             Log.e("PetsFragment", "Error updating pet")
-                            Toast.makeText(context, "Nem sikerült szerkeszteni az állatot: $updatedPet", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Nem sikerült szerkeszteni az állatot.", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -388,7 +385,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
         setImageUrlsAdapter(pet.imageUrls ?: listOf())
 
         petSex?.setText(pet.sex.description, false)
-        petStatus?.setText(pet.status.description, false)
+        petStatus?.setText(pet.status?.description, false)
 
         val breedId = pet.breedId
         val breed = apiSrv.fetchBreed(breedId)
@@ -401,6 +398,7 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
         val sex = Sex.entries.find { it.description == petSex?.text.toString() } ?: Sex.OTHER
         val status = Status.entries.find { it.description == petStatus?.text.toString() } ?: Status.UNKNOWN
+
 
         val breedId = apiSrv.fetchBreeds().find { it.name == petBreed?.text.toString() }?.breedId ?: ""
 
