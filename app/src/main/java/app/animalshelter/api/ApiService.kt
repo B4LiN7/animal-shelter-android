@@ -17,7 +17,6 @@ import java.io.File
 class ApiService(context: Context) {
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    private val baseUrl: String? = sharedPreferences.getString("base_url", "http://10.0.2.2:3001/")
     private val retrofitService: RetrofitService = RetrofitService(sharedPreferences)
 
     // Create instances of the interfaces
@@ -29,8 +28,8 @@ class ApiService(context: Context) {
     private val authInterface: Auth = retrofitService.getRetrofitService().create(Auth::class.java)
     private val adoptionInterface: Adoption = retrofitService.getRetrofitService().create(Adoption::class.java)
 
+    // To refresh the token if needed
     private val tokenRefresh: TokenRefresh = TokenRefresh(authInterface, sharedPreferences)
-
 
     /**
      * Simple test to check if the base URL is reachable.
