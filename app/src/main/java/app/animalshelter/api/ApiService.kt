@@ -262,44 +262,37 @@ class ApiService(context: Context) {
         }
     }
 
-    suspend fun fetchImagesForPets(petList: List<PetDto>): MutableMap<String, Bitmap> {
-        val imageMap: MutableMap<String, Bitmap> = mutableMapOf()
-        for (pet in petList) {
-            try {
-                val imageUrls = pet.imageUrls?.toList()
-                if (imageUrls != null) {
-                    if (imageUrls.isEmpty()) {
-                        Log.e("ApiService", "Pet ${pet.name} [${pet.petId}] don't have image")
-                        continue
-                    }
-                }
-
-                val fullUrl = imageUrls?.elementAt(0)
-                val startIndex = fullUrl?.indexOf("/uploads")
-                val shortUrl = fullUrl?.substring(startIndex ?:0 )
-
-                val image = shortUrl?.let { mediaInterface.getMedia(it) }
-
-                val inputStream = image?.byteStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                imageMap[pet.petId] = bitmap
-            } catch (e: Exception) {
-                Log.e("ApiService", "Error fetching pet ${pet.name} [${pet.petId}] image", e)
-            }
+    fun hasBaseUrl(path: String?): Boolean {
+        val regex = Regex("^https?://[\\w.-]+")
+        if (path == null) {
+            return false
         }
-        return imageMap
+        return regex.containsMatchIn(path)
     }
     suspend fun fetchImage(path: String): Bitmap? {
-        return try {
-            val startIndex = path.indexOf("/uploads")
-            val shortUrl = path.substring(startIndex ?:0 )
-            val image = mediaInterface.getMedia(shortUrl)
-            val inputStream = image.byteStream()
-            Log.i("ApiService", "Image fetched from $path")
-            BitmapFactory.decodeStream(inputStream)
-        } catch (e: Exception) {
-            Log.e("ApiService", "Error fetching image from $path", e)
-            null
+        if (hasBaseUrl(path)) {
+            return try {
+                val image = mediaInterface.getMediaOutsideBaseUrl(path)
+                val inputStream = image.byteStream()
+                Log.i("ApiService", "Image fetched from $path")
+                BitmapFactory.decodeStream(inputStream)
+            } catch (e: Exception) {
+                Log.e("ApiService", "Error fetching image from $path", e)
+                null
+            }
+        }
+        else {
+            return try {
+                val startIndex = path.indexOf("/uploads")
+                val shortUrl = path.substring(startIndex ?:0 )
+                val image = mediaInterface.getMedia(shortUrl)
+                val inputStream = image.byteStream()
+                Log.i("ApiService", "Image fetched from $path")
+                BitmapFactory.decodeStream(inputStream)
+            } catch (e: Exception) {
+                Log.e("ApiService", "Error fetching image from $path", e)
+                null
+            }
         }
     }
 

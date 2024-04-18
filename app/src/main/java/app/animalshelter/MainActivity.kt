@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 var image = apiSrv.fetchImage(user.profileImageUrl)
                 if (image != null) {
                     imageView?.visibility = ImageView.VISIBLE
-                    headerView?.findViewById<ImageView>(R.id.Header_ImageView)?.setImageResource(R.drawable.ic_launcher_foreground)
+                    imageView?.setImageBitmap(image)
                 }
                 else {
                     imageView?.visibility = ImageView.GONE

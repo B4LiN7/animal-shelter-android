@@ -9,6 +9,9 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface Media {
+    @GET
+    suspend fun getMediaOutsideBaseUrl(@retrofit2.http.Url url: String): ResponseBody
+
     @GET("/media/{path}")
     suspend fun getMedia(@Path("path") path: String): ResponseBody
 
