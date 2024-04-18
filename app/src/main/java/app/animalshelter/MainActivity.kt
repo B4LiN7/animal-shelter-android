@@ -1,9 +1,11 @@
 package app.animalshelter
 
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.DatePicker
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -123,6 +125,7 @@ class MainActivity : AppCompatActivity() {
     private fun initHeader() {
         val headerView = navigationView?.getHeaderView(0)
         val textView = headerView?.findViewById<TextView>(R.id.Header_TextView)
+        val imageView = headerView?.findViewById<ImageView>(R.id.Header_ImageView)
         lifecycleScope.launch {
             val user = apiSrv.fetchCurrentUser()
             if (user != null) {
@@ -131,6 +134,15 @@ class MainActivity : AppCompatActivity() {
                 logoutItem?.isVisible = true
                 var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
                 loginItem?.isVisible = false
+
+                var image = apiSrv.fetchImage(user.profileImageUrl)
+                if (image != null) {
+                    imageView?.visibility = ImageView.VISIBLE
+                    headerView?.findViewById<ImageView>(R.id.Header_ImageView)?.setImageResource(R.drawable.ic_launcher_foreground)
+                }
+                else {
+                    imageView?.visibility = ImageView.GONE
+                }
 
                 val fragment = WelcomeFragment()
                 supportFragmentManager.beginTransaction()
@@ -142,6 +154,8 @@ class MainActivity : AppCompatActivity() {
                 item?.isVisible = false
                 var loginItem = navigationView?.menu?.findItem(R.id.nav_login)
                 loginItem?.isVisible = true
+
+                imageView?.visibility = ImageView.GONE
 
                 val fragment = LoginFragment()
                 supportFragmentManager.beginTransaction()

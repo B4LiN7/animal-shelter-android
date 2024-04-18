@@ -62,16 +62,13 @@ class AdoptionsFragment : Fragment() {
         Log.i("AdoptionsFragment", "Fetching pets")
         val petList: List<PetDto> = apiSrv.fetchPetsArray(adoptionList.map { it.petId })
 
-        Log.i("AdoptionsFragment", "Fetching pet images")
-        val imageMap: MutableMap<String, Bitmap> = apiSrv.fetchImagesForPets(petList)
-
         Log.i("AdoptionsFragment", "Setting up RecyclerView")
-        val adapter = AdoptionAdapter(adoptionList, usernameMap, petList, imageMap)
+        val adapter = AdoptionAdapter(adoptionList, usernameMap, petList)
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.adapter = adapter
     }
 
-    private inner class AdoptionAdapter(private val adoptions: List<AdoptionResponse>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>, private val images: Map<String, Bitmap>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
+    private inner class AdoptionAdapter(private val adoptions: List<AdoptionResponse>, private val usernames: MutableMap<String, UserNameDto>, private val pets: List<PetDto>) : RecyclerView.Adapter<AdoptionAdapter.AdoptionViewHolder>() {
         inner class AdoptionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val image: ImageView = view.findViewById(R.id.AdoptionItem_ImageView_Image)
             val pet: TextView = view.findViewById(R.id.AdoptionItem_TextView_Pet)
@@ -93,8 +90,20 @@ class AdoptionsFragment : Fragment() {
             val username = usernames[adoption.userId]?.name
             val pet = pets.find { it.petId == adoption.petId }
             
-            val image: Bitmap = images[pet?.petId] ?: Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-            holder.image.setImageBitmap(image)
+            val imageUrl = pet?.imageUrls?.firstOrNull()
+            if (imageUrl != null) {
+                lifecycleScope.launch {
+                    val bitmap: Bitmap? = apiSrv.fetchImage(imageUrl)
+                    if (bitmap != null) {
+                        holder.image.visibility = ImageView.VISIBLE
+                        holder.image.setImageBitmap(bitmap)
+                    } else {
+                        holder.image.visibility = ImageView.GONE
+                    }
+                }
+            } else {
+                holder.image.visibility = ImageView.GONE
+            }
 
             holder.pet.text = pet?.name ?: "Unknown"
             holder.user.text = username ?: "Unknown"

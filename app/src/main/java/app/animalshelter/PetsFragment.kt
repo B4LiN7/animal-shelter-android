@@ -243,18 +243,15 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
             return
         }
 
-        Log.i("PetsFragment", "Fetching pet images")
-        val imageMap: MutableMap<String, Bitmap> = apiSrv.fetchImagesForPets(petList)
-
         Log.i("PetsFragment", "Fetching breeds")
         val breedList: List<BreedDto> = apiSrv.fetchBreeds()
 
         Log.i("PetsFragment", "Setting up RecyclerView")
-        val adapter = PetAdapter(petList, imageMap, breedList)
+        val adapter = PetAdapter(petList, breedList)
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.adapter = adapter
     }
-    private inner class PetAdapter(private val pets: List<PetDto>, private val images: Map<String, Bitmap>, private val breeds: List<BreedDto>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
+    private inner class PetAdapter(private val pets: List<PetDto>, private val breeds: List<BreedDto>) : RecyclerView.Adapter<PetAdapter.PetViewHolder>() {
         inner class PetViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.PetItem_TextView_Name)
             val image: ImageView = view.findViewById(R.id.PetItem_ImageView_Image)
@@ -275,10 +272,28 @@ class PetsFragment : Fragment(), DatePickerFragment.DatePickerCallback {
 
             holder.name.text = pet.name
 
-            val image: Bitmap = images[pet.petId] ?: Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-            holder.image.setImageBitmap(image)
+            val imageUrl = pet.imageUrls?.firstOrNull()
+            if (imageUrl != null) {
+                lifecycleScope.launch {
+                    Log.i("PetsFragment", "Fetching image '$imageUrl' to pet [${pet.petId}]")
+                    val image = apiSrv.fetchImage(imageUrl)
+                    if (image != null) {
+                        holder.image.visibility = ImageView.VISIBLE
+                        holder.image.setImageBitmap(image)
+                    } else {
+                        holder.image.visibility = ImageView.GONE
+                    }
+                }
+            } else {
+                holder.image.visibility = ImageView.GONE
+            }
 
-            holder.description.text = pet.description
+            if (pet.description.isNotEmpty()) {
+                holder.description.visibility = View.VISIBLE
+                holder.description.text = pet.description
+            } else {
+                holder.description.visibility = View.GONE
+            }
             val breedName = breeds.find { it.breedId == pet.breedId }?.name ?: "Unknown"
             holder.data.text = "Kor: ${age} | Faj: $breedName | Állapot: ${pet.status}"
 
