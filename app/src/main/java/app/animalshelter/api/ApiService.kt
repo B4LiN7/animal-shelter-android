@@ -138,6 +138,9 @@ class ApiService(context: Context) {
         }
     }
 
+    /**
+     * Fetch adoptions from the server.
+     */
     suspend fun fetchAdoptions(): List<AdoptionResponse> {
         tokenRefresh.refreshTokenIfNeeded()
         var adoptionList: List<AdoptionResponse> = emptyList()
@@ -148,6 +151,12 @@ class ApiService(context: Context) {
         }
         return adoptionList
     }
+
+    /**
+     * Update an adoption on the server.
+     * @param adoptionId - ID of the adoption to update.
+     * @param dto - AdoptionDto with the updated values.
+     */
     suspend fun updateAdoption(adoptionId: String, dto: AdoptionDto): Response<ResponseBody>? {
         tokenRefresh.refreshTokenIfNeeded()
         return try {
@@ -157,6 +166,10 @@ class ApiService(context: Context) {
             null
         }
     }
+    /**
+     * Delete an adoption on the server.
+     * @param adoptionId - ID of the adoption to delete.
+     */
     suspend fun deleteAdoption(adoptionId: String): Response<ResponseBody>? {
         tokenRefresh.refreshTokenIfNeeded()
         return try {
@@ -167,7 +180,9 @@ class ApiService(context: Context) {
         }
     }
 
-
+    /**
+     * Fetches the users' names for the given adoptions.
+     */
     suspend fun fetchUsernames(adoptions: List<AdoptionResponse>): MutableMap<String, UserNameDto> {
         tokenRefresh.refreshTokenIfNeeded()
         val usernameMap: MutableMap<String, UserNameDto> = mutableMapOf()
@@ -181,6 +196,10 @@ class ApiService(context: Context) {
         }
         return usernameMap
     }
+
+    /**
+     * Fetch pets
+     */
     suspend fun fetchPets(): List<PetDto> {
         val petList: List<PetDto>
         try {
@@ -191,6 +210,10 @@ class ApiService(context: Context) {
         }
         return petList
     }
+    /**
+     * Fetch pets (only the give ones)
+     * @param pets - List of pet IDs to fetch
+     */
     suspend fun fetchPetsArray(pets: List<String>): List<PetDto> {
         var petList = mutableListOf<PetDto>()
         for (pet in pets) {
@@ -203,6 +226,11 @@ class ApiService(context: Context) {
         }
         return petList
     }
+
+    /**
+     * Create a new pet
+     * @param pet - PetDto object to create
+     */
     suspend fun createPet(pet: PetDto): PetDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -223,6 +251,12 @@ class ApiService(context: Context) {
             null
         }
     }
+
+    /**
+     * Update a pet
+     * @param petId - ID of the pet to update
+     * @param pet - PetDto object with the updated values
+     */
     suspend fun updatePet(petId: String, pet: PetDto): PetDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -243,6 +277,11 @@ class ApiService(context: Context) {
             null
         }
     }
+
+    /**
+     * Delete a pet
+     * @param petId - ID of the pet to delete
+     */
     suspend fun deletePet(petId: String): PetDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -262,6 +301,10 @@ class ApiService(context: Context) {
         }
     }
 
+    /**
+     * Check if the path contains a base URL.
+     * @param path - Path to check.
+     */
     fun hasBaseUrl(path: String?): Boolean {
         val regex = Regex("^https?://[\\w.-]+")
         if (path == null) {
@@ -269,6 +312,11 @@ class ApiService(context: Context) {
         }
         return regex.containsMatchIn(path)
     }
+
+    /**
+     * Fetches an image from the server.
+     * @param path - Path to the image.
+     */
     suspend fun fetchImage(path: String): Bitmap? {
         if (hasBaseUrl(path)) {
             return try {
@@ -296,6 +344,9 @@ class ApiService(context: Context) {
         }
     }
 
+    /**
+     * Fetch breeds
+     */
     suspend fun fetchBreeds(): List<BreedDto> {
         var breedList: List<BreedDto> = mutableListOf()
         try {
@@ -305,6 +356,9 @@ class ApiService(context: Context) {
         }
         return breedList
     }
+    /**
+     * Fetch a breed by ID
+     */
     suspend fun fetchBreed(breedId: String): BreedDto? {
         return try {
             val breed = breedInterface.getBreedById(breedId)
@@ -314,6 +368,11 @@ class ApiService(context: Context) {
             return null
         }
     }
+
+    /**
+     * Create a new breed
+     * @param breed - BreedDto object to create
+     */
     suspend fun createBreed(breed: BreedDto): BreedDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -332,6 +391,12 @@ class ApiService(context: Context) {
             null
         }
     }
+
+    /**
+     * Update a breed
+     * @param breedId - ID of the breed to update
+     * @param breed - BreedDto object with the updated values
+     */
     suspend fun updateBreed(breedId: String, breed: BreedDto): BreedDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -350,6 +415,11 @@ class ApiService(context: Context) {
             null
         }
     }
+
+    /**
+     * Delete a breed
+     * @param breedId - ID of the breed to delete
+     */
     suspend fun deleteBreed(breedId: String): BreedDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -369,7 +439,9 @@ class ApiService(context: Context) {
         }
     }
 
-
+    /**
+     * Fetch species
+     */
     suspend fun fetchSpecies(): List<SpeciesDto> {
         var speciesList: List<SpeciesDto> = mutableListOf()
         try {
@@ -379,6 +451,9 @@ class ApiService(context: Context) {
         }
         return speciesList
     }
+    /**
+     * Fetch a species by ID
+     */
     suspend fun fetchSpecies(speciesId: String): SpeciesDto? {
         return try {
             val species = speciesInterface.getSpeciesById(speciesId)
@@ -388,6 +463,10 @@ class ApiService(context: Context) {
             return null
         }
     }
+    /**
+     * Create a new species
+     * @param species - SpeciesDto object to create
+     */
     suspend fun createSpecies(species: SpeciesDto): SpeciesDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
@@ -406,6 +485,12 @@ class ApiService(context: Context) {
             null
         }
     }
+
+    /**
+     * Update a species
+     * @param speciesId - ID of the species to update
+     * @param species - SpeciesDto object with the updated values
+     */
     suspend fun updateSpecies(speciesId: String, species: SpeciesDto): SpeciesDto? {
         return try {
             tokenRefresh.refreshTokenIfNeeded()
